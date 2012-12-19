@@ -1,0 +1,34 @@
+{
+  "name":         "simple-js",
+  "version":      "0.0.0",
+  "main":         "./lib/Store",
+  "description":  "A simple JSON store",
+  "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",
+  "homepage":     "http://github.com/flosse/simple-js",
+  "bugs":         "http://github.com/flosse/simple-js/issues",
+  "licenses":     [{"type": "MIT"}],
+  "engine":       "node",
+  "devDependencies":
+  {
+    "buster":               ">=0.6.3",
+    "buster-coffee":        ">=0.1.3",
+    "sinon":                ">=1.3.4",
+    "coffee-script":        ">=1.4.0"
+  },
+  "repositories":
+  [
+    {
+      "type": "git",
+      "path": "git://github.com/flosse/simple-js.git"
+    }
+  ],
+  "maintainers":
+  [
+    {
+      "name":   "Markus Kohlhase",
+      "email":  "mail@markus-kohlhase.de",
+      "web":    "http://github.com/flosse/"
+    }
+  ],
+  "scripts": { "test": "buster test --node" }
+}

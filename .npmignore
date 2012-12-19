@@ -1,0 +1,9 @@
+src/
+spec/
+buster.js
+.gitignore
+.npmignore
+.travis.yml
+*.log
+*.swp
+*.coffee
