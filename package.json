@@ -1,6 +1,6 @@
 {
   "name":         "simple-js",
-  "version":      "0.0.0",
+  "version":      "0.1.0",
   "main":         "./lib/Store",
   "description":  "A simple JSON store",
   "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",
@@ -8,6 +8,12 @@
   "bugs":         "http://github.com/flosse/simple-js/issues",
   "licenses":     [{"type": "MIT"}],
   "engine":       "node",
+  "dependencies":
+  {
+    "mkdirp":           ">=0.3.4",
+    "node-uuid":        ">=1.4.0",
+    "async":            ">=0.1.22"
+  },
   "devDependencies":
   {
     "buster":               ">=0.6.3",

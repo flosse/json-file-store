@@ -2,6 +2,8 @@
 
 A simple JSON store for node.js.
 
+[![Build Status](https://secure.travis-ci.org/flosse/simple-js.png)](http://travis-ci.org/flosse/simple-js)
+
 WARNING:
 Don't use it if you want to persist a large amount of objects.
 Use a real DB instead.
