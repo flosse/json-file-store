@@ -32,12 +32,20 @@ db.get("anId", function(err, obj){
 })
 
 db.all(function(err, objs){
-  // objs is an array of all objects
+  // objs is a map
 });
 ```
 db.delete("myId", function(err){
   // the file data/myId.json was removed
 });
+
+### Single file mode
+
+If you want to store all objects in a single file, just set the `single` flag:
+
+```javascript
+var db = new Store("data",{single:true});
+```
 
 ## License
 
