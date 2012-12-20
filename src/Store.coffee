@@ -27,7 +27,7 @@ class Store
           cb err
         else
           @_cache[o.id] = o
-          cb null
+          cb null, o.id
     catch e
       cb e
 

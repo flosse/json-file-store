@@ -23,3 +23,23 @@ describe "simple-js", ->
           }
           """
         done()
+
+  it "can load an object", (done) ->
+
+    store = new Store "test"
+    data  = { x: 87 }
+    store.save data, (err, id) ->
+      store.get id, (err, o) ->
+        (expect o.x).toBe 87
+        done()
+
+  it "can delete an object", (done) ->
+    store = new Store "test"
+    data  = { y: 88 }
+    store.save data, (err, id) ->
+      fs.readFile "./test/#{id}.json", (err, content) ->
+        (expect content).not.toBe ""
+        store.delete id, (err) ->
+          fs.readFile "./test/#{id}.json", (err, content) ->
+            (expect err).toBeDefined()
+            done()
