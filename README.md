@@ -34,10 +34,11 @@ db.get("anId", function(err, obj){
 db.all(function(err, objs){
   // objs is an array of all objects
 });
-```
+
 db.delete("myId", function(err){
   // the file data/myId.json was removed
 });
+```
 
 ## License
 
