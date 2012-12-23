@@ -8,22 +8,55 @@ path   = require 'path'
 uuid   = require 'node-uuid'
 mkdirp = require 'mkdirp'
 
+isJSONFile = (f) -> f.substr(-5) is ".json"
+removeFileExtension = (f) -> f.split(".json")[0]
+getIDs = (a) -> a.filter(isJSONFile).map(removeFileExtension)
+readIDsSync = (d) -> getIDs fs.readdirSync d
+readIDs = (d, cb) -> fs.readdir d, (err, ids) -> cb err, getIDs ids
+
+getObjectFromFileSync = (id) ->
+  try
+    JSON.parse fs.readFileSync @_getFileName id
+  catch e
+    console.error e
+    {}
+
+getObjectFromFile = (id, cb) ->
+ fs.readFile @_getFileName(id), (err, o) ->
+   return cb err if err?
+   try
+     cb null, JSON.parse o
+   catch e
+     console.error e
+     cb e
+
+id2fileName = (id, dir) -> path.join dir,"#{id}.json"
+
 class Store
 
-  constructor: (name='store') ->
+  constructor: (@name='store', opt={}) ->
 
-    @_dir   = path.join process.cwd(), name
+    @_single = opt.single
+    if isJSONFile @name
+      @name = @name.split(".json")[0]
+      @_single = true
+    @_dir = path.join process.cwd(), @name
+
     @_cache = {}
-    mkdirp.sync @_dir
 
-  _id2file: (id) -> path.join @_dir,"#{id}.json"
+    if @_single then @_cache = @allSync() else mkdirp.sync @_dir
+
+  _getFileName: (id) -> if @_single then "#{@_dir}.json" else id2fileName id, @_dir
 
   save: (o, cb=->) ->
     o.id ?= uuid.v4()
+    file = @_getFileName o.id
+    data = if @_single then @_cache[o.id] = o; @_cache else o
     try
-      json = JSON.stringify o, null, 2
-      fs.writeFile @_id2file(o.id), json, 'utf8', (err) =>
+      json = JSON.stringify data, null, 2
+      fs.writeFile file, json, 'utf8', (err) =>
         if err?
+          delete @_cache[o.id] if @_single
           cb err
         else
           @_cache[o.id] = o
@@ -33,33 +66,55 @@ class Store
 
   get: (id, cb=->) ->
     o = @_cache[id]
-    if o?
-      cb null, o
-    else
-      fs.readFile @_id2file(id), (err, json) =>
-        return cb err if err?
-        try
-          o = JSON.parse json
-          @_cache[id] = o
-          cb null, o
-        catch e
-          cb e
+    return cb null, o if o?
+    getObjectFromFile.call @, id, (err, o) =>
+      return cb err if err?
+      if @_single then @_cache = o else @_cache[id] = o
+      cb null, @_cache[id]
 
   delete: (id, cb) ->
-    fs.unlink @_id2file(id), (err) =>
-      if err?
-        cb err
-      else
+    file = @_getFileName(id)
+    if @_single
+      backup = @_cache[id]
+      delete @_cache[id]
+      json = JSON.stringify @_cache, null, 2
+      fs.writeFile file, json, 'utf8', (err) =>
+        if err?
+          @_cache[id] = backup
+          cb err
+        else
+          cb null
+    else
+      fs.unlink file, (err) =>
+        return cb err if err?
         delete @_cache[id]
         cb null
 
   all: (cb=->) ->
-    that = @
-    fs.readdir @_dir, (err, files) =>
-      return cb err if err?
-      files   = files.filter (f)  -> f.substr(-5) is ".json"
-      files   = files.map    (f)  -> f.split(".json")[0]
-      loaders = files.map    (id) -> (cb) -> that.get id, cb
-      async.parallel loaders, cb
+    if @_single
+      fs.readFile @_getFileName(), (err, content) ->
+        return cb err if err?
+        try
+          cb null, JSON.parse content
+        catch e
+          cb e
+    else
+      readIDs @_dir, (err, ids) =>
+        return cb err if err?
+        that = @
+        loaders = ids.map (id) -> (cb) -> that.get id, cb
+        async.parallel loaders, (err, objs) ->
+          all = {}
+          all[o.id] = o for o in objs
+          cb err, all
+
+  allSync: ->
+    if @_single
+      getObjectFromFileSync.apply @
+    else
+      objects = {}
+      for f in readIDsSync @_dir
+        objects[f] = getObjectFromFileSync.call @, f
+      objects
 
 module.exports = Store
