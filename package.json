@@ -1,6 +1,6 @@
 {
   "name":         "simple-js",
-  "version":      "0.1.0",
+  "version":      "0.1.1",
   "main":         "./lib/Store",
   "description":  "A simple JSON store",
   "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",

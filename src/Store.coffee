@@ -1,5 +1,5 @@
 ###
-Copyright (C) 2012 Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright (C) 2012 - 2013 Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 async  = require 'async'
