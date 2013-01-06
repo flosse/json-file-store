@@ -10,7 +10,7 @@ Use a real DB instead.
 
 ## Install
 
-  npm install simple-js
+    npm install simple-js
 
 ## Usage
 
