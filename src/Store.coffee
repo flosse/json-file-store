@@ -7,6 +7,7 @@ fs     = require 'fs'
 path   = require 'path'
 uuid   = require 'node-uuid'
 mkdirp = require 'mkdirp'
+touch  = require 'touch'
 
 isJSONFile = (f) -> f.substr(-5) is ".json"
 removeFileExtension = (f) -> f.split(".json")[0]
@@ -40,13 +41,19 @@ class Store
     if isJSONFile @name
       @name = @name.split(".json")[0]
       @_single = true
+
     @_dir = path.join process.cwd(), @name
+    @_dir = path.dirname @_dir if @_single
 
     @_cache = {}
 
-    if @_single then @_cache = @allSync() else mkdirp.sync @_dir
+    mkdirp.sync @_dir
 
-  _getFileName: (id) -> if @_single then "#{@_dir}.json" else id2fileName id, @_dir
+    if @_single
+      touch.sync @_getFileName()
+      @_cache = @allSync()
+
+  _getFileName: (id) -> if @_single then "#{@_dir}/#{path.basename @name}.json" else id2fileName id, @_dir
 
   save: (o, cb=->) ->
     o.id ?= uuid.v4()

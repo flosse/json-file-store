@@ -112,6 +112,11 @@ describe "simple-js", ->
               (expect content).toEqual "{}"
               done()
 
-    it "can be defined if the name is a file", ->
-      store = new Store NAME + '.json'
+    it "can be defined if the name is a file", (done) ->
+      store = new Store './foo/' + NAME + '.json'
       (expect store._single).toBe true
+      f = path.join process.cwd(), "./foo/#{NAME}.json"
+      fs.readFile f, (err, content) ->
+        (expect err).toBeFalsy()
+        (expect content).toEqual ""
+        done()
