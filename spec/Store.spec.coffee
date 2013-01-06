@@ -21,13 +21,12 @@ describe "simple-js", ->
 
   it "can save an object", (done) ->
     store = new Store NAME
-    data  = {id: "id", x: 56 }
-    store.save data, (err) ->
+    data  = { x: 56 }
+    store.save "id", data, (err) ->
       (expect err).toBeFalsy()
       fs.readFile "./#{NAME}/id.json", (err, content) ->
         (expect content).toEqual """
           {
-            "id": "id",
             "x": 56
           }
           """
@@ -43,14 +42,14 @@ describe "simple-js", ->
 
   it "can load all objects", (done) ->
     store = new Store NAME
-    x1 = { id: "x1", j: 3 }
-    x2 = { id: "x2", k: 4 }
-    store.save x1, (err, id) ->
-      store.save x2, (err, id) ->
+    x1 = { j: 3 }
+    x2 = { k: 4 }
+    store.save x1, (err, id1) ->
+      store.save x2, (err, id2) ->
         store.all (err, all) ->
           (expect err).toBeFalsy()
-          (expect all.x1.j).toBe 3
-          (expect all.x2.k).toBe 4
+          (expect all[id1].j).toBe 3
+          (expect all[id2].k).toBe 4
           done()
 
   it "can delete an object", (done) ->
@@ -68,11 +67,11 @@ describe "simple-js", ->
 
     it "can store data in a single file", (done) ->
       store = new Store NAME, single: true
-      d1  = {id: "d1", x: 0.6 }
-      d2  = {id: "d2", z: -3 }
-      store.save d1, (err) ->
+      d1  = { x: 0.6 }
+      d2  = { z: -3 }
+      store.save "d1", d1, (err) ->
         (expect err).toBeFalsy()
-        store.save d2, (err) ->
+        store.save "d2", d2, (err) ->
           (expect err).toBeFalsy()
           f = path.join process.cwd(), "#{NAME}.json"
           fs.readFile f, (err, content) ->
@@ -80,11 +79,9 @@ describe "simple-js", ->
             (expect content).toEqual """
               {
                 "d1": {
-                  "id": "d1",
                   "x": 0.6
                 },
                 "d2": {
-                  "id": "d2",
                   "z": -3
                 }
               }

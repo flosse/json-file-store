@@ -55,10 +55,14 @@ class Store
 
   _getFileName: (id) -> if @_single then "#{@_dir}/#{path.basename @name}.json" else id2fileName id, @_dir
 
-  save: (o, cb=->) ->
-    o.id ?= uuid.v4()
-    file = @_getFileName o.id
-    data = if @_single then @_cache[o.id] = o; @_cache else o
+  save: (id, o, cb=->) ->
+    if typeof id is "object"
+      cb = o
+      o = id
+      id = null
+    id ?= uuid.v4()
+    file = @_getFileName id
+    data = if @_single then @_cache[id] = o; @_cache else o
     try
       json = JSON.stringify data, null, 2
       fs.writeFile file, json, 'utf8', (err) =>
@@ -66,8 +70,8 @@ class Store
           delete @_cache[o.id] if @_single
           cb err
         else
-          @_cache[o.id] = o
-          cb null, o.id
+          @_cache[id] = o
+          cb null, id
     catch e
       cb e
 
@@ -109,11 +113,13 @@ class Store
       readIDs @_dir, (err, ids) =>
         return cb err if err?
         that = @
-        loaders = ids.map (id) -> (cb) -> that.get id, cb
-        async.parallel loaders, (err, objs) ->
-          all = {}
-          all[o.id] = o for o in objs
-          cb err, all
+        all  = {}
+        loaders = for id in ids then do (id) ->
+          (cb) ->
+            that.get id, (err, o) ->
+              all[id] = o if not err?
+              cb err
+        async.parallel loaders, (err) -> cb err, all
 
   allSync: ->
     if @_single
