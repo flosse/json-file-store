@@ -7,7 +7,6 @@ fs     = require 'fs'
 path   = require 'path'
 uuid   = require 'node-uuid'
 mkdirp = require 'mkdirp'
-touch  = require 'touch'
 
 isJSONFile = (f) -> f.substr(-5) is ".json"
 removeFileExtension = (f) -> f.split(".json")[0]
@@ -20,7 +19,6 @@ getObjectFromFileSync = (id) ->
     JSON.parse fs.readFileSync @_getFileName id
   catch e
     console.error e
-    {}
 
 getObjectFromFile = (id, cb) ->
  fs.readFile @_getFileName(id), (err, o) ->
@@ -50,7 +48,10 @@ class Store
     mkdirp.sync @_dir
 
     if @_single
-      touch.sync @_getFileName()
+      fn = @_getFileName()
+      if not fs.exists fn
+        if fs.writeFileSync fn, "{}", 'utf8'
+          throw new Error "could not create database"
       @_cache = @allSync()
 
   _getFileName: (id) -> if @_single then "#{@_dir}/#{path.basename @name}.json" else id2fileName id, @_dir
@@ -79,9 +80,11 @@ class Store
     o = @_cache[id]
     return cb null, o if o?
     getObjectFromFile.call @, id, (err, o) =>
-      return cb err if err?
-      if @_single then @_cache = o else @_cache[id] = o
-      cb null, @_cache[id]
+      return cb new Error "could not load data" if err?
+      item = if @_single then o[id] else o
+      return cb new Error "could not load data" if not item?
+      @_cache[id] = item
+      cb null, item
 
   delete: (id, cb) ->
     file = @_getFileName(id)
@@ -123,11 +126,17 @@ class Store
 
   allSync: ->
     if @_single
-      getObjectFromFileSync.apply @
+      db = getObjectFromFileSync.apply @
+      throw new Error "could not load database" unless typeof db is "object"
+      db
     else
       objects = {}
       for f in readIDsSync @_dir
-        objects[f] = getObjectFromFileSync.call @, f
+        item = getObjectFromFileSync.call @, f
+        if item?
+          objects[f] = item
+        else
+          console.error "could not load '#{f}'"
       objects
 
 module.exports = Store
