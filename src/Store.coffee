@@ -50,7 +50,7 @@ class Store
 
     if @_single
       fn = @_getFileName()
-      if not fs.exists fn
+      if not fs.existsSync fn
         if fs.writeFileSync fn, "{}", 'utf8'
           throw new Error "could not create database"
       @_cache = @allSync()

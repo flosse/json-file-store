@@ -103,7 +103,7 @@ describe "simple-js", ->
     it "can store data in a single file", (done) ->
       store = new Store NAME, single: true
       fs.readFile "./#{NAME}.json", (err, content) ->
-        (expect content).not.toBe ""
+        (expect content).toEqual "{}"
         d1  = { x: 0.6 }
         d2  = { z: -3 }
         store.save "d1", d1, (err) ->
@@ -124,6 +124,20 @@ describe "simple-js", ->
                 }
                 """
               done()
+
+    it "loads an existing db", (done) ->
+      store = new Store NAME, single: true
+      store.save "id1", {foo: "bar"}, (err) ->
+        store = new Store NAME, single: true
+        fs.readFile "./#{NAME}.json", (err, content) ->
+          (expect content).toEqual """
+            {
+              "id1": {
+                "foo": "bar"
+              }
+            }
+            """
+          done()
 
     it "get data from a single file", (done) ->
       store = new Store NAME, single:true
