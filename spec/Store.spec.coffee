@@ -42,6 +42,22 @@ describe "simple-js", ->
             (expect o).toEqual {}
             done()
 
+  it "creates a deep copy for the cache", (done) ->
+    store = new Store NAME + '.json'
+    z = []
+    y = z: z
+    data  =
+      x: 56
+      y:y
+    store.save data, (err, id) ->
+      store.get id, (err, res) ->
+        (expect res).toEqual data
+        (expect res).not.toBe data
+        (expect res.y).toEqual y
+        (expect res.y).not.toBe y
+        (expect res.y.z).not.toBe z
+        done()
+
   it "can load an object", (done) ->
     store = new Store NAME
     data  = { x: 87 }

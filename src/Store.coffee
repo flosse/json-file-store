@@ -7,6 +7,7 @@ fs     = require 'fs'
 path   = require 'path'
 uuid   = require 'node-uuid'
 mkdirp = require 'mkdirp'
+clone  = require 'clone'
 
 isJSONFile = (f) -> f.substr(-5) is ".json"
 removeFileExtension = (f) -> f.split(".json")[0]
@@ -63,12 +64,17 @@ class Store
       id = null
     id ?= uuid.v4()
     file = @_getFileName id
-    data = if @_single then @_cache[id] = o; @_cache else o
+    o = clone o
+    data = if @_single
+      backup = @_cache[id]
+      @_cache[id] = o
+      @_cache
+    else o
     try
       json = JSON.stringify data, null, 2
       fs.writeFile file, json, 'utf8', (err) =>
         if err?
-          delete @_cache[o.id] if @_single
+          @_cache[id] = backup if @_single
           cb err
         else
           @_cache[id] = o
@@ -78,7 +84,7 @@ class Store
 
   get: (id, cb=->) ->
     o = @_cache[id]
-    return cb null, o if o?
+    return cb null, clone o if o?
     getObjectFromFile.call @, id, (err, o) =>
       return cb new Error "could not load data" if err?
       item = if @_single then o[id] else o

@@ -12,7 +12,8 @@
   {
     "mkdirp":           ">=0.3.4",
     "node-uuid":        ">=1.4.0",
-    "async":            ">=0.1.22"
+    "async":            ">=0.1.22",
+    "clone":            ">=0.1.5"
   },
   "devDependencies":
   {
