@@ -17,12 +17,12 @@ readIDs = (d, cb) -> fs.readdir d, (err, ids) -> cb err, getIDs ids
 
 getObjectFromFileSync = (id) ->
   try
-    JSON.parse fs.readFileSync @_getFileName id
+    JSON.parse fs.readFileSync (@_getFileName id), "utf8"
   catch e
     console.error e
 
 getObjectFromFile = (id, cb) ->
- fs.readFile @_getFileName(id), (err, o) ->
+ fs.readFile @_getFileName(id), "utf8", (err, o) ->
    return cb err if err?
    try
      cb null, JSON.parse o
@@ -112,7 +112,7 @@ class Store
 
   all: (cb=->) ->
     if @_single
-      fs.readFile @_getFileName(), (err, content) ->
+      fs.readFile @_getFileName(), "utf8", (err, content) ->
         return cb err if err?
         try
           cb null, JSON.parse content

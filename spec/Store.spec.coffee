@@ -137,7 +137,10 @@ describe "simple-js", ->
               }
             }
             """
-          done()
+          store.all (err, items) ->
+            (expect err?).toBe false
+            (expect items.id1).toEqual {foo: "bar"}
+            done()
 
     it "get data from a single file", (done) ->
       store = new Store NAME, single:true
