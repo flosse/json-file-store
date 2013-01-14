@@ -42,6 +42,18 @@ describe "simple-js", ->
             (expect o).toEqual {}
             done()
 
+  it "can save an object synchronous", ->
+    store = new Store NAME
+    data  = { s: "ync" }
+    err = store.saveSync "id", data
+    (expect err).toEqual "id"
+    content = fs.readFileSync "./#{NAME}/id.json"
+    (expect content).toEqual """
+      {
+        "s": "ync"
+      }
+      """
+
   it "creates a deep copy for the cache", (done) ->
     store = new Store NAME + '.json'
     z = []

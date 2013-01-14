@@ -32,6 +32,36 @@ getObjectFromFile = (id, cb) ->
 
 id2fileName = (id, dir) -> path.join dir,"#{id}.json"
 
+save = (id, o, cb) ->
+  if typeof id is "object"
+    cb = o
+    o = id
+    id = null
+  id ?= uuid.v4()
+  file = @_getFileName id
+  o = clone o
+  data = if @_single
+    backup = @_cache[id]
+    @_cache[id] = o
+    @_cache
+  else o
+  done = (err) =>
+    if err?
+      @_cache[id] = backup if @_single
+      if cb? then  cb err else err
+    else
+      @_cache[id] = o
+      if cb? then  cb null, id else id
+  try
+    json = JSON.stringify data, null, 2
+    if cb?
+      fs.writeFile file, json, 'utf8', done
+    else
+      err = fs.writeFileSync file, json, 'utf8'
+      done err
+  catch e
+    if cb? then cb e else e
+
 class Store
 
   constructor: (@name='store', opt={}) ->
@@ -57,30 +87,9 @@ class Store
 
   _getFileName: (id) -> if @_single then "#{@_dir}/#{path.basename @name}.json" else id2fileName id, @_dir
 
-  save: (id, o, cb=->) ->
-    if typeof id is "object"
-      cb = o
-      o = id
-      id = null
-    id ?= uuid.v4()
-    file = @_getFileName id
-    o = clone o
-    data = if @_single
-      backup = @_cache[id]
-      @_cache[id] = o
-      @_cache
-    else o
-    try
-      json = JSON.stringify data, null, 2
-      fs.writeFile file, json, 'utf8', (err) =>
-        if err?
-          @_cache[id] = backup if @_single
-          cb err
-        else
-          @_cache[id] = o
-          cb null, id
-    catch e
-      cb e
+  save: (id, o, cb=->) -> save.call @, id, o, cb
+
+  saveSync: (id, o) -> save.call @, id, o
 
   get: (id, cb=->) ->
     o = @_cache[id]
