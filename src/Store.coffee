@@ -78,6 +78,40 @@ get = (id, cb) ->
     err = (o = getObjectFromFileSync.call @, id) instanceof Error
     done err, o
 
+remove = (id, cb) ->
+  file = @_getFileName(id)
+  if @_single
+    backup = @_cache[id]
+    delete @_cache[id]
+    try
+      json = JSON.stringify @_cache, null, 2
+    catch e
+      @_cache[id] = backup
+      return if cb? then cb e else e
+    done = (err)=>
+        if err?
+          @_cache[id] = backup
+          if cb? then cb err else err
+        else cb? null
+    if cb?
+      fs.writeFile file, json, 'utf8', done
+    else
+      try
+        done fs.writeFileSync file, json, 'utf8'
+      catch e
+        done e
+  else
+    done = (err) =>
+      return (if cb? cb err else err) if err?
+      delete @_cache[id]
+      if cb? then cb null
+    if cb? then fs.unlink file, done
+    else
+      try
+        done fs.unlinkSync file
+      catch e
+        done e
+
 class Store
 
   constructor: (@name='store', opt={}) ->
@@ -111,23 +145,9 @@ class Store
 
   getSync: (id) -> get.call @, id
 
-  delete: (id, cb) ->
-    file = @_getFileName(id)
-    if @_single
-      backup = @_cache[id]
-      delete @_cache[id]
-      json = JSON.stringify @_cache, null, 2
-      fs.writeFile file, json, 'utf8', (err) =>
-        if err?
-          @_cache[id] = backup
-          cb err
-        else
-          cb null
-    else
-      fs.unlink file, (err) =>
-        return cb err if err?
-        delete @_cache[id]
-        cb null
+  delete: (id, cb) -> remove.call @, id, cb
+
+  deleteSync: (id) -> remove.call @, id
 
   all: (cb=->) ->
     if @_single

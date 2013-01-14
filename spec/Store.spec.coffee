@@ -106,6 +106,17 @@ describe "simple-js", ->
           (expect all[id2].k).toBe 4
           done()
 
+  it "can load all objects synchronously",->
+    store = new Store NAME
+    x1 = { j: 3 }
+    x2 = { k: 4 }
+    id1 = store.saveSync x1
+    id2 = store.save x2
+    all = store.allSync()
+    (expect all instanceof Error).toBe false
+    (expect all[id1].j).toBe 3
+    (expect all[id2].k).toBe 4
+
   it "can delete an object", (done) ->
     store = new Store NAME
     data  = { y: 88 }
@@ -116,6 +127,15 @@ describe "simple-js", ->
           fs.readFile "./#{NAME}/#{id}.json", (err, content) ->
             (expect err).toBeDefined()
             done()
+
+  it "can delete an synchonously", ->
+    store = new Store NAME
+    data  = { y: 88 }
+    id = store.saveSync data
+    content = fs.readFileSync "./#{NAME}/#{id}.json"
+    (expect content).not.toBe ""
+    err = store.deleteSync id
+    (expect -> fs.readFileSync "./#{NAME}/#{id}.json").toThrow()
 
   describe "single file mode", (done) ->
 
