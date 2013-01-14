@@ -32,17 +32,31 @@ db.save(d, function(err, id){
   // id is a unique ID
 });
 
+// save synchronously
+var id = db.saveSync("anId", d);
+
 db.get("anId", function(err, obj){
   // obj = { foo: "bar" }
 })
 
+// get synchronously
+var obj = db.get("anId");
+
+// get all available objects
 db.all(function(err, objs){
   // objs is a map: ID => OBJECT
 });
 
+// get all synchronously
+var objs = db.allSync()
+
+// delete by ID
 db.delete("myId", function(err){
   // the file data/myId.json was removed
 });
+
+// delete synchronously
+db.delete("myId");
 ```
 
 ### Single file mode
