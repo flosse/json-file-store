@@ -42,11 +42,11 @@ describe "simple-js", ->
             (expect o).toEqual {}
             done()
 
-  it "can save an object synchronous", ->
+  it "can save an object synchronously", ->
     store = new Store NAME
     data  = { s: "ync" }
-    err = store.saveSync "id", data
-    (expect err).toEqual "id"
+    id = store.saveSync "id", data
+    (expect id).toEqual "id"
     content = fs.readFileSync "./#{NAME}/id.json"
     (expect content).toEqual """
       {
@@ -77,6 +77,13 @@ describe "simple-js", ->
       store.get id, (err, o) ->
         (expect o.x).toBe 87
         done()
+
+  it "can load an object synchronously", ->
+    store = new Store NAME
+    data  = { x: 87 }
+    id = store.saveSync data
+    o = store.getSync id
+    (expect o.x).toBe 87
 
   it "returns an erro if it cannot load an object", (done) ->
     store = new Store NAME + ".json"

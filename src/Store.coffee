@@ -20,6 +20,7 @@ getObjectFromFileSync = (id) ->
     JSON.parse fs.readFileSync (@_getFileName id), "utf8"
   catch e
     console.error e
+    e
 
 getObjectFromFile = (id, cb) ->
  fs.readFile @_getFileName(id), "utf8", (err, o) ->
@@ -48,19 +49,34 @@ save = (id, o, cb) ->
   done = (err) =>
     if err?
       @_cache[id] = backup if @_single
-      if cb? then  cb err else err
+      if cb? then cb err else err
     else
       @_cache[id] = o
       if cb? then  cb null, id else id
   try
     json = JSON.stringify data, null, 2
-    if cb?
-      fs.writeFile file, json, 'utf8', done
-    else
-      err = fs.writeFileSync file, json, 'utf8'
-      done err
+    if cb? then fs.writeFile file, json, 'utf8', done
+    else done fs.writeFileSync file, json, 'utf8'
   catch e
     if cb? then cb e else e
+
+get = (id, cb) ->
+  o = clone @_cache[id]
+  return (if cb? then cb null, o else o) if o?
+  done = (err, o) =>
+    if err
+      e = new Error "could not load data"
+      return if cb? then cb e else e
+    item = if @_single then o[id] else o
+    if not item?
+      e = new Error "could not load data"
+      return if cb? then cb e else e
+    @_cache[id] = item
+    if cb? then cb null, item else item
+  if cb? then getObjectFromFile.call @, id, done
+  else
+    err = (o = getObjectFromFileSync.call @, id) instanceof Error
+    done err, o
 
 class Store
 
@@ -91,15 +107,9 @@ class Store
 
   saveSync: (id, o) -> save.call @, id, o
 
-  get: (id, cb=->) ->
-    o = @_cache[id]
-    return cb null, clone o if o?
-    getObjectFromFile.call @, id, (err, o) =>
-      return cb new Error "could not load data" if err?
-      item = if @_single then o[id] else o
-      return cb new Error "could not load data" if not item?
-      @_cache[id] = item
-      cb null, item
+  get: (id, cb=->) -> get.call @, id, cb
+
+  getSync: (id) -> get.call @, id
 
   delete: (id, cb) ->
     file = @_getFileName(id)
