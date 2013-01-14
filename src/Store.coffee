@@ -31,6 +31,19 @@ getObjectFromFile = (id, cb) ->
      console.error e
      cb e
 
+saveObjectToFile = (o, file, cb) ->
+  try
+    json = JSON.stringify o, null, 2
+    if cb?
+      fs.writeFile file, json, 'utf8', cb
+    else
+      try
+        fs.writeFileSync file, json, 'utf8'
+      catch e
+        e
+  catch e
+    if cb? then cb e else e
+
 id2fileName = (id, dir) -> path.join dir,"#{id}.json"
 
 save = (id, o, cb) ->
@@ -52,13 +65,9 @@ save = (id, o, cb) ->
       if cb? then cb err else err
     else
       @_cache[id] = o
-      if cb? then  cb null, id else id
-  try
-    json = JSON.stringify data, null, 2
-    if cb? then fs.writeFile file, json, 'utf8', done
-    else done fs.writeFileSync file, json, 'utf8'
-  catch e
-    if cb? then cb e else e
+      if cb? then cb null, id else id
+  if cb? then saveObjectToFile data, file, done
+  else done saveObjectToFile data, file
 
 get = (id, cb) ->
   o = clone @_cache[id]
@@ -83,23 +92,16 @@ remove = (id, cb) ->
   if @_single
     backup = @_cache[id]
     delete @_cache[id]
-    try
-      json = JSON.stringify @_cache, null, 2
-    catch e
-      @_cache[id] = backup
-      return if cb? then cb e else e
     done = (err)=>
-        if err?
-          @_cache[id] = backup
-          if cb? then cb err else err
-        else cb? null
+      if err?
+        @_cache[id] = backup
+        if cb? then cb err else err
+      else cb? null
     if cb?
-      fs.writeFile file, json, 'utf8', done
+      saveObjectToFile @_cache, file, done
     else
-      try
-        done fs.writeFileSync file, json, 'utf8'
-      catch e
-        done e
+      err = (o = saveObjectToFile @_cache, file) instanceof Error
+      done err, o
   else
     done = (err) =>
       return (if cb? cb err else err) if err?
@@ -151,12 +153,7 @@ class Store
 
   all: (cb=->) ->
     if @_single
-      fs.readFile @_getFileName(), "utf8", (err, content) ->
-        return cb err if err?
-        try
-          cb null, JSON.parse content
-        catch e
-          cb e
+      getObjectFromFile.call @, undefined, cb
     else
       readIDs @_dir, (err, ids) =>
         return cb err if err?
