@@ -34,11 +34,15 @@ getObjectFromFile = (id, cb) ->
 saveObjectToFile = (o, file, cb) ->
   try
     json = JSON.stringify o, null, 2
+    tmpFileName = "#{uuid.v4()}.tmp"
     if cb?
-      fs.writeFile file, json, 'utf8', cb
+      fs.writeFile tmpFileName, json, 'utf8', (err) ->
+        return cb err if err
+        fs.rename tmpFileName, file, cb
     else
       try
-        fs.writeFileSync file, json, 'utf8'
+        fs.writeFileSync tmpFileName, json, 'utf8'
+        fs.renameSync tmpFileName, file
       catch e
         e
   catch e

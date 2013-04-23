@@ -1,7 +1,7 @@
 var config = module.exports;
 
 config["server"] = {
-  environment: "node",
+  env: "node",
   specs: ["spec/*.spec.coffee"],
   extensions: [require("buster-coffee")]
 };
