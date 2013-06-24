@@ -7,7 +7,7 @@ Store         = require "../src/Store"
 
 buster.spec.expose()
 
-describe "simple-js", ->
+describe "jfs", ->
 
   NAME = ".specTests"
 

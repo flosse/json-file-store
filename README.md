@@ -1,8 +1,8 @@
-# simple-js
+# JSON file store
 
-A simple JSON store for node.js.
+A simple JSON file store for node.js.
 
-[![Build Status](https://secure.travis-ci.org/flosse/simple-js.png)](http://travis-ci.org/flosse/simple-js)
+[![Build Status](https://secure.travis-ci.org/flosse/json-file-store.png)](http://travis-ci.org/flosse/json-file-store)
 
 WARNING:
 Don't use it if you want to persist a large amount of objects.
@@ -10,12 +10,12 @@ Use a real DB instead.
 
 ## Install
 
-    npm install simple-js
+    npm install jfs --save
 
 ## Usage
 
 ```javascript
-var Store = require("simple-js");
+var Store = require("jfs");
 var db = new Store("data");
 
 var d = {

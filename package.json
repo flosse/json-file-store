@@ -1,11 +1,11 @@
 {
-  "name":         "simple-js",
+  "name":         "jfs",
   "version":      "0.1.6",
   "main":         "./lib/Store",
-  "description":  "A simple JSON store",
+  "description":  "A simple JSON file store",
   "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",
-  "homepage":     "http://github.com/flosse/simple-js",
-  "bugs":         "http://github.com/flosse/simple-js/issues",
+  "homepage":     "http://github.com/flosse/json-file-store",
+  "bugs":         "http://github.com/flosse/json-file-store/issues",
   "licenses":     [{"type": "MIT"}],
   "engine":       "node",
   "dependencies":
@@ -26,7 +26,7 @@
   [
     {
       "type": "git",
-      "path": "git://github.com/flosse/simple-js.git"
+      "path": "git://github.com/flosse/json-file-store.git"
     }
   ],
   "maintainers":
