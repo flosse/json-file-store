@@ -30,11 +30,7 @@ describe "jfs", ->
     store.save "id", data, (err) ->
       (expect err).toBeFalsy()
       fs.readFile "./#{NAME}/id.json", (err, content) ->
-        (expect content).toEqual """
-          {
-            "x": 56
-          }
-          """
+        (expect content).toEqual '{"x":56}'
         store.save "emptyObj", {}, (err) ->
           (expect err).toBeFalsy()
           store.get "emptyObj", (err, o) ->
@@ -48,11 +44,7 @@ describe "jfs", ->
     id = store.saveSync "id", data
     (expect id).toEqual "id"
     content = fs.readFileSync "./#{NAME}/id.json"
-    (expect content).toEqual """
-      {
-        "s": "ync"
-      }
-      """
+    (expect content).toEqual '{"s":"ync"}'
 
   it "creates a deep copy for the cache", (done) ->
     store = new Store NAME + '.json'
@@ -137,10 +129,20 @@ describe "jfs", ->
     err = store.deleteSync id
     (expect -> fs.readFileSync "./#{NAME}/#{id}.json").toThrow()
 
+  it "can pretty print the file content", ->
+    store = new Store NAME, pretty: true
+    id = store.saveSync "id", { p: "retty" }
+    content = fs.readFileSync "./#{NAME}/id.json"
+    (expect content).toEqual """
+      {
+        "p": "retty"
+      }
+      """
+
   describe "single file mode", (done) ->
 
     it "can store data in a single file", (done) ->
-      store = new Store NAME, single: true
+      store = new Store NAME, single: true, pretty:true
       fs.readFile "./#{NAME}.json", (err, content) ->
         (expect content).toEqual "{}"
         d1  = { x: 0.6 }
@@ -169,13 +171,7 @@ describe "jfs", ->
       store.save "id1", {foo: "bar"}, (err) ->
         store = new Store NAME, single: true
         fs.readFile "./#{NAME}.json", (err, content) ->
-          (expect content).toEqual """
-            {
-              "id1": {
-                "foo": "bar"
-              }
-            }
-            """
+          (expect content).toEqual '{"id1":{"foo":"bar"}}'
           store.all (err, items) ->
             (expect err?).toBe false
             (expect items.id1).toEqual {foo: "bar"}

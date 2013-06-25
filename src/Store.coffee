@@ -32,21 +32,22 @@ getObjectFromFile = (id, cb) ->
      cb e
 
 saveObjectToFile = (o, file, cb) ->
+  indent = if @_pretty then 2
   try
-    json = JSON.stringify o, null, 2
-    tmpFileName = "#{uuid.v4()}.tmp"
-    if cb?
-      fs.writeFile tmpFileName, json, 'utf8', (err) ->
-        return cb err if err
-        fs.rename tmpFileName, file, cb
-    else
-      try
-        fs.writeFileSync tmpFileName, json, 'utf8'
-        fs.renameSync tmpFileName, file
-      catch e
-        e
+    json = JSON.stringify o, null, indent
   catch e
-    if cb? then cb e else e
+    return if cb? then cb e else e
+  tmpFileName = "#{uuid.v4()}.tmp"
+  if cb?
+    fs.writeFile tmpFileName, json, 'utf8', (err) ->
+      return cb err if err
+      fs.rename tmpFileName, file, cb
+  else
+    try
+      fs.writeFileSync tmpFileName, json, 'utf8'
+      fs.renameSync tmpFileName, file
+    catch e
+      e
 
 id2fileName = (id, dir) -> path.join dir,"#{id}.json"
 
@@ -58,11 +59,12 @@ save = (id, o, cb) ->
   id ?= uuid.v4()
   file = @_getFileName id
   o = clone o
-  data = if @_single
-    backup = @_cache[id]
-    @_cache[id] = o
-    @_cache
-  else o
+  data =
+    if @_single
+      backup = @_cache[id]
+      @_cache[id] = o
+      @_cache
+    else o
   done = (err) =>
     if err?
       @_cache[id] = backup if @_single
@@ -70,8 +72,8 @@ save = (id, o, cb) ->
     else
       @_cache[id] = o
       if cb? then cb null, id else id
-  if cb? then saveObjectToFile data, file, done
-  else done saveObjectToFile data, file
+  if cb? then saveObjectToFile.call @, data, file, done
+  else done saveObjectToFile.call @, data, file
 
 get = (id, cb) ->
   o = clone @_cache[id]
@@ -122,7 +124,8 @@ class Store
 
   constructor: (@name='store', opt={}) ->
 
-    @_single = opt.single
+    @_single = opt.single is true
+    @_pretty = opt.pretty is true
     if isJSONFile @name
       @name = @name.split(".json")[0]
       @_single = true
@@ -141,7 +144,9 @@ class Store
           throw new Error "could not create database"
       @_cache = @allSync()
 
-  _getFileName: (id) -> if @_single then "#{@_dir}/#{path.basename @name}.json" else id2fileName id, @_dir
+  _getFileName: (id) ->
+    if @_single then "#{@_dir}/#{path.basename @name}.json"
+    else id2fileName id, @_dir
 
   save: (id, o, cb=->) -> save.call @, id, o, cb
 

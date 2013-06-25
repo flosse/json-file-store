@@ -39,6 +39,18 @@ db.get("anId", function(err, obj){
   // obj = { foo: "bar" }
 })
 
+// pretty print file content
+var prettyDB = new Store("data",{pretty:true});
+var id = prettyDB.saveSync({foo:{bar:"baz"}});
+// now the file content is formated in this way:
+{
+  "foo": {
+    "bar": "baz"
+  }
+}
+// instead of this:
+{"foo":{"bar":"baz"}}
+
 // get synchronously
 var obj = db.get("anId");
 
