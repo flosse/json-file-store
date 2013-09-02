@@ -3,6 +3,8 @@
 A simple JSON file store for node.js.
 
 [![Build Status](https://secure.travis-ci.org/flosse/json-file-store.png)](http://travis-ci.org/flosse/json-file-store)
+[![Dependency Status](https://gemnasium.com/flosse/json-file-store.png)](https://gemnasium.com/flosse/json-file-store)
+[![NPM version](https://badge.fury.io/js/json-file-store.png)](http://badge.fury.io/js/json-file-store)
 
 WARNING:
 Don't use it if you want to persist a large amount of objects.
