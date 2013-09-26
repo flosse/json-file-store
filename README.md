@@ -54,7 +54,7 @@ var id = prettyDB.saveSync({foo:{bar:"baz"}});
 {"foo":{"bar":"baz"}}
 
 // get synchronously
-var obj = db.get("anId");
+var obj = db.getSync("anId");
 
 // get all available objects
 db.all(function(err, objs){
