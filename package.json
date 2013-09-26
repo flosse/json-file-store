@@ -10,23 +10,23 @@
   "engine":       "node",
   "dependencies":
   {
-    "mkdirp":           "~0.3.4",
-    "node-uuid":        "~1.4.0",
-    "async":            "~0.1.22",
-    "clone":            "~0.1.6"
+    "mkdirp":           "~0.3.5",
+    "node-uuid":        "~1.4.1",
+    "async":            "~0.2.9",
+    "clone":            "~0.1.10"
   },
   "devDependencies":
   {
-    "buster":               "~0.6.12",
+    "buster":               "~0.7.6",
     "buster-coffee":        "~0.1.4",
-    "sinon":                "~1.6.0",
-    "coffee-script":        "~1.6.2"
+    "sinon":                "~1.7.3",
+    "coffee-script":        "~1.6.3"
   },
-  "repositories":
+  "repository":
   [
     {
       "type": "git",
-      "path": "git://github.com/flosse/json-file-store.git"
+      "url":  "git://github.com/flosse/json-file-store.git"
     }
   ],
   "maintainers":
@@ -37,5 +37,5 @@
       "web":    "http://github.com/flosse/"
     }
   ],
-  "scripts": { "test": "buster test --node" }
+  "scripts": { "test": "buster-test --node" }
 }

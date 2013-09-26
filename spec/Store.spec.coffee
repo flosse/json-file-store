@@ -1,9 +1,10 @@
-fs            = require 'fs'
-path          = require 'path'
-global.buster = require "buster"
-global.sinon  = require "sinon"
-Store         = require "../src/Store"
-{ exec }      = require 'child_process'
+fs        = require 'fs'
+path      = require 'path'
+buster    = require "buster"
+sinon     = require "sinon"
+Store     = require "../src/Store"
+{ exec }  = require 'child_process'
+expect    = buster.expect
 
 buster.spec.expose()
 
@@ -29,7 +30,7 @@ describe "jfs", ->
     data  = { x: 56 }
     store.save "id", data, (err) ->
       (expect err).toBeFalsy()
-      fs.readFile "./#{NAME}/id.json", (err, content) ->
+      fs.readFile "./#{NAME}/id.json", "utf-8", (err, content) ->
         (expect content).toEqual '{"x":56}'
         store.save "emptyObj", {}, (err) ->
           (expect err).toBeFalsy()
@@ -43,7 +44,7 @@ describe "jfs", ->
     data  = { s: "ync" }
     id = store.saveSync "id", data
     (expect id).toEqual "id"
-    content = fs.readFileSync "./#{NAME}/id.json"
+    content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
     (expect content).toEqual '{"s":"ync"}'
 
   it "creates a deep copy for the cache", (done) ->
@@ -113,10 +114,10 @@ describe "jfs", ->
     store = new Store NAME
     data  = { y: 88 }
     store.save data, (err, id) ->
-      fs.readFile "./#{NAME}/#{id}.json", (err, content) ->
+      fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
         (expect content).not.toBe ""
         store.delete id, (err) ->
-          fs.readFile "./#{NAME}/#{id}.json", (err, content) ->
+          fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
             (expect err).toBeDefined()
             done()
 
@@ -124,15 +125,15 @@ describe "jfs", ->
     store = new Store NAME
     data  = { y: 88 }
     id = store.saveSync data
-    content = fs.readFileSync "./#{NAME}/#{id}.json"
+    content = fs.readFileSync "./#{NAME}/#{id}.json", "utf-8"
     (expect content).not.toBe ""
     err = store.deleteSync id
-    (expect -> fs.readFileSync "./#{NAME}/#{id}.json").toThrow()
+    (expect -> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").toThrow()
 
   it "can pretty print the file content", ->
     store = new Store NAME, pretty: true
     id = store.saveSync "id", { p: "retty" }
-    content = fs.readFileSync "./#{NAME}/id.json"
+    content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
     (expect content).toEqual """
       {
         "p": "retty"
@@ -143,7 +144,7 @@ describe "jfs", ->
 
     it "can store data in a single file", (done) ->
       store = new Store NAME, single: true, pretty:true
-      fs.readFile "./#{NAME}.json", (err, content) ->
+      fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
         (expect content).toEqual "{}"
         d1  = { x: 0.6 }
         d2  = { z: -3 }
@@ -152,7 +153,7 @@ describe "jfs", ->
           store.save "d2", d2, (err) ->
             (expect err).toBeFalsy()
             f = path.join process.cwd(), "#{NAME}.json"
-            fs.readFile f, (err, content) ->
+            fs.readFile f, "utf-8", (err, content) ->
               (expect err).toBeFalsy()
               (expect content).toEqual """
                 {
@@ -170,7 +171,7 @@ describe "jfs", ->
       store = new Store NAME, single: true
       store.save "id1", {foo: "bar"}, (err) ->
         store = new Store NAME, single: true
-        fs.readFile "./#{NAME}.json", (err, content) ->
+        fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
           (expect content).toEqual '{"id1":{"foo":"bar"}}'
           store.all (err, items) ->
             (expect err?).toBe false
@@ -190,10 +191,10 @@ describe "jfs", ->
       data  = { y: 88 }
       f = path.join process.cwd(), "#{NAME}.json"
       store.save data, (err, id) ->
-        fs.readFile f, (err, content) ->
+        fs.readFile f, "utf-8", (err, content) ->
           (expect content.length > 7).toBe true
           store.delete id, (err) ->
-            fs.readFile f, (err, content) ->
+            fs.readFile f, "utf-8", (err, content) ->
               (expect err).toBeFalsy()
               (expect content).toEqual "{}"
               done()
@@ -202,7 +203,7 @@ describe "jfs", ->
       store = new Store './' + NAME + '/foo.json'
       (expect store._single).toBe true
       f = path.join process.cwd(), "./#{NAME}/foo.json"
-      fs.readFile f, (err, content) ->
+      fs.readFile f, "utf-8", (err, content) ->
         (expect err).toBeFalsy()
         (expect content).toEqual "{}"
         done()
