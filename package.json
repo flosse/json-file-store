@@ -1,6 +1,6 @@
 {
   "name":         "jfs",
-  "version":      "0.1.6",
+  "version":      "0.1.7",
   "main":         "./lib/Store",
   "description":  "A simple JSON file store",
   "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",
@@ -13,11 +13,11 @@
     "mkdirp":           "~0.3.5",
     "node-uuid":        "~1.4.1",
     "async":            "~0.2.9",
-    "clone":            "~0.1.10"
+    "clone":            "~0.1.11"
   },
   "devDependencies":
   {
-    "buster":               "~0.7.6",
+    "buster":               "~0.7.8",
     "buster-coffee":        "~0.1.4",
     "sinon":                "~1.7.3",
     "coffee-script":        "~1.6.3"

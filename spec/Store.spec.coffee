@@ -25,6 +25,12 @@ describe "jfs", ->
   it "is a class", ->
     (expect typeof Store).toBe "function"
 
+  it "resolves the path correctly", ->
+    x = new Store "./foo/bar"
+    (expect x._dir).toEqual process.cwd() + '/foo/bar'
+    x = new Store __dirname + "/foo/bar"
+    (expect x._dir).toEqual process.cwd() + '/spec/foo/bar'
+
   it "can save an object", (done) ->
     store = new Store NAME
     data  = { x: 56 }

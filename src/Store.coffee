@@ -130,7 +130,7 @@ class Store
       @name = @name.split(".json")[0]
       @_single = true
 
-    @_dir = path.join process.cwd(), @name
+    @_dir = path.resolve @name
     @_dir = path.dirname @_dir if @_single
 
     @_cache = {}
