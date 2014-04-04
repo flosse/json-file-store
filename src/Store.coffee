@@ -1,5 +1,5 @@
 ###
-Copyright (C) 2012 - 2013 Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright (C) 2012 - 2014 Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 async  = require 'async'
@@ -110,7 +110,7 @@ remove = (id, cb) ->
       done err, o
   else
     done = (err) =>
-      return (if cb? cb err else err) if err?
+      return (if cb? then cb err else err) if err?
       delete @_cache[id]
       if cb? then cb null
     if cb? then fs.unlink file, done

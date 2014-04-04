@@ -12,15 +12,18 @@
   {
     "mkdirp":           "~0.3.5",
     "node-uuid":        "~1.4.1",
-    "async":            "~0.2.9",
+    "async":            "~0.6.2",
     "clone":            "~0.1.11"
   },
   "devDependencies":
   {
-    "buster":               "~0.7.8",
-    "buster-coffee":        "~0.1.4",
-    "sinon":                "~1.7.3",
-    "coffee-script":        "~1.6.3"
+    "mocha":                "~1.18.2",
+    "chai":                 "~1.9.1",
+    "sinon":                "~1.9.1",
+    "sinon-chai":           "~2.5.0",
+    "coveralls":            "~2.10.0",
+    "istanbul":             "~0.2.7",
+    "coffee-script":        "~1.7.1"
   },
   "repository":
   [
@@ -37,5 +40,9 @@
       "web":    "http://github.com/flosse/"
     }
   ],
-  "scripts": { "test": "buster-test --node" }
+  "scripts": {
+    "pre-publish": "coffee -o lib/ -c src/*.coffee",
+    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register spec/*.spec.coffee",
+    "coveralls": "istanbul cover ./node_modules/.bin/_mocha --report lcovonly && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+  }
 }

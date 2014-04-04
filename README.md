@@ -87,6 +87,10 @@ or point to a JSON file:
 var db = new Store("./path/to/data.json");
 ```
 
+## Tests
+
+    npm test
+
 ## License
 
 This project is licensed under the MIT License.

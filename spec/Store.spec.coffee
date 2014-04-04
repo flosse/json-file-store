@@ -1,18 +1,19 @@
 fs        = require 'fs'
 path      = require 'path'
-buster    = require "buster"
+chai      = require "chai"
 sinon     = require "sinon"
+sinonChai = require 'sinon-chai'
 Store     = require "../src/Store"
 { exec }  = require 'child_process'
-expect    = buster.expect
+should    = chai.should()
 
-buster.spec.expose()
+chai.use sinonChai
 
 describe "jfs", ->
 
   NAME = ".specTests"
 
-  after (done) ->
+  afterEach (done) ->
     try
       fs.unlinkSync NAME + '.json'
     catch e
@@ -23,35 +24,35 @@ describe "jfs", ->
       done()
 
   it "is a class", ->
-    (expect typeof Store).toBe "function"
+    Store.should.be.a.function
 
   it "resolves the path correctly", ->
     x = new Store "./foo/bar"
-    (expect x._dir).toEqual process.cwd() + '/foo/bar'
+    x._dir.should.equal process.cwd() + '/foo/bar'
     x = new Store __dirname + "/foo/bar"
-    (expect x._dir).toEqual process.cwd() + '/spec/foo/bar'
+    x._dir.should.equal process.cwd() + '/spec/foo/bar'
 
   it "can save an object", (done) ->
     store = new Store NAME
     data  = { x: 56 }
     store.save "id", data, (err) ->
-      (expect err).toBeFalsy()
+      should.not.exist err
       fs.readFile "./#{NAME}/id.json", "utf-8", (err, content) ->
-        (expect content).toEqual '{"x":56}'
+        content.should.equal '{"x":56}'
         store.save "emptyObj", {}, (err) ->
-          (expect err).toBeFalsy()
+          should.not.exist err
           store.get "emptyObj", (err, o) ->
-            (expect err?).toBe false
-            (expect o).toEqual {}
+            should.not.exist err
+            o.should.eql {}
             done()
 
   it "can save an object synchronously", ->
     store = new Store NAME
     data  = { s: "ync" }
     id = store.saveSync "id", data
-    (expect id).toEqual "id"
+    id.should.equal "id"
     content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
-    (expect content).toEqual '{"s":"ync"}'
+    content.should.equal '{"s":"ync"}'
 
   it "creates a deep copy for the cache", (done) ->
     store = new Store NAME + '.json'
@@ -62,11 +63,12 @@ describe "jfs", ->
       y:y
     store.save data, (err, id) ->
       store.get id, (err, res) ->
-        (expect res).toEqual data
-        (expect res).not.toBe data
-        (expect res.y).toEqual y
-        (expect res.y).not.toBe y
-        (expect res.y.z).not.toBe z
+        res.should.eql data
+        res.should.not.equal data
+        res.y.should.eql y
+        res.y.should.not.equal y
+        res.y.z.should.eql z
+        res.y.z.should.not.equal z
         done()
 
   it "can load an object", (done) ->
@@ -74,7 +76,7 @@ describe "jfs", ->
     data  = { x: 87 }
     store.save data, (err, id) ->
       store.get id, (err, o) ->
-        (expect o.x).toBe 87
+        o.x.should.equal 87
         done()
 
   it "can load an object synchronously", ->
@@ -82,15 +84,15 @@ describe "jfs", ->
     data  = { x: 87 }
     id = store.saveSync data
     o = store.getSync id
-    (expect o.x).toBe 87
+    o.x.should.equal 87
 
   it "returns an erro if it cannot load an object", (done) ->
     store = new Store NAME + ".json"
     store.save "anId", {}, (err, id) ->
-      (expect err?).toBe false
+      should.not.exist err
       store.get "foobarobject", (err, o) ->
-        (expect err?).toBe true
-        (expect err.message).toEqual "could not load data"
+        err.should.be.truthy
+        err.message.should.equal "could not load data"
         done()
 
   it "can load all objects", (done) ->
@@ -100,9 +102,9 @@ describe "jfs", ->
     store.save x1, (err, id1) ->
       store.save x2, (err, id2) ->
         store.all (err, all) ->
-          (expect err).toBeFalsy()
-          (expect all[id1].j).toBe 3
-          (expect all[id2].k).toBe 4
+          should.not.exist err
+          all[id1].j.should.equal 3
+          all[id2].k.should.equal 4
           done()
 
   it "can load all objects synchronously",->
@@ -112,19 +114,19 @@ describe "jfs", ->
     id1 = store.saveSync x1
     id2 = store.save x2
     all = store.allSync()
-    (expect all instanceof Error).toBe false
-    (expect all[id1].j).toBe 3
-    (expect all[id2].k).toBe 4
+    (all instanceof Error).should.be.falsy
+    all[id1].j.should.equal 3
+    all[id2].k.should.equal 4
 
   it "can delete an object", (done) ->
     store = new Store NAME
     data  = { y: 88 }
     store.save data, (err, id) ->
       fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
-        (expect content).not.toBe ""
+        content.should.not.eql ""
         store.delete id, (err) ->
           fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
-            (expect err).toBeDefined()
+            err.should.exist
             done()
 
   it "can delete an synchonously", ->
@@ -132,15 +134,15 @@ describe "jfs", ->
     data  = { y: 88 }
     id = store.saveSync data
     content = fs.readFileSync "./#{NAME}/#{id}.json", "utf-8"
-    (expect content).not.toBe ""
+    content.should.not.eql ""
     err = store.deleteSync id
-    (expect -> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").toThrow()
+    (-> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").should.throw()
 
   it "can pretty print the file content", ->
     store = new Store NAME, pretty: true
     id = store.saveSync "id", { p: "retty" }
     content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
-    (expect content).toEqual """
+    content.should.equal """
       {
         "p": "retty"
       }
@@ -151,17 +153,17 @@ describe "jfs", ->
     it "can store data in a single file", (done) ->
       store = new Store NAME, single: true, pretty:true
       fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
-        (expect content).toEqual "{}"
+        content.should.equal "{}"
         d1  = { x: 0.6 }
         d2  = { z: -3 }
         store.save "d1", d1, (err) ->
-          (expect err).toBeFalsy()
+          should.not.exist err
           store.save "d2", d2, (err) ->
-            (expect err).toBeFalsy()
+            should.not.exist err
             f = path.join process.cwd(), "#{NAME}.json"
             fs.readFile f, "utf-8", (err, content) ->
-              (expect err).toBeFalsy()
-              (expect content).toEqual """
+              should.not.exist err
+              content.should.equal """
                 {
                   "d1": {
                     "x": 0.6
@@ -178,10 +180,10 @@ describe "jfs", ->
       store.save "id1", {foo: "bar"}, (err) ->
         store = new Store NAME, single: true
         fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
-          (expect content).toEqual '{"id1":{"foo":"bar"}}'
+          content.should.equal '{"id1":{"foo":"bar"}}'
           store.all (err, items) ->
-            (expect err?).toBe false
-            (expect items.id1).toEqual {foo: "bar"}
+            should.not.exist err
+            items.id1.should.eql {foo: "bar"}
             done()
 
     it "get data from a single file", (done) ->
@@ -189,7 +191,7 @@ describe "jfs", ->
       data  = { foo: "asdlöfj" }
       store.save data, (err, id) ->
         store.get id, (err, o) ->
-          (expect o.foo).toBe "asdlöfj"
+          o.foo.should.equal "asdlöfj"
           done()
 
     it "can delete an object", (done) ->
@@ -198,18 +200,18 @@ describe "jfs", ->
       f = path.join process.cwd(), "#{NAME}.json"
       store.save data, (err, id) ->
         fs.readFile f, "utf-8", (err, content) ->
-          (expect content.length > 7).toBe true
+          (content.length > 7).should.be.truthy
           store.delete id, (err) ->
             fs.readFile f, "utf-8", (err, content) ->
-              (expect err).toBeFalsy()
-              (expect content).toEqual "{}"
+              should.not.exist err
+              content.should.equal "{}"
               done()
 
     it "can be defined if the name is a file", (done) ->
       store = new Store './' + NAME + '/foo.json'
-      (expect store._single).toBe true
+      store._single.should.be.true
       f = path.join process.cwd(), "./#{NAME}/foo.json"
       fs.readFile f, "utf-8", (err, content) ->
-        (expect err).toBeFalsy()
-        (expect content).toEqual "{}"
+        should.not.exist err
+        content.should.equal "{}"
         done()

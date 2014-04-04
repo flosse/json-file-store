@@ -7,4 +7,6 @@ buster.js
 *.log
 *.swp
 *.coffee
+*.tmp
 node_modules
+TODO
