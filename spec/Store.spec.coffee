@@ -1,13 +1,10 @@
 fs        = require 'fs'
 path      = require 'path'
 chai      = require "chai"
-sinon     = require "sinon"
-sinonChai = require 'sinon-chai'
 Store     = require "../src/Store"
 { exec }  = require 'child_process'
 should    = chai.should()
-
-chai.use sinonChai
+clint     = require "coffeelint"
 
 describe "jfs", ->
 
@@ -214,4 +211,17 @@ describe "jfs", ->
       fs.readFile f, "utf-8", (err, content) ->
         should.not.exist err
         content.should.equal "{}"
+        done()
+
+  describe "source code", ->
+
+    it "is clean", (done) ->
+      fs.readFile path.join(__dirname, "../src/Store.coffee"), "utf8", (err, code) ->
+        should.not.exist err
+        errors = clint.lint code
+        l = errors.length
+        unless l is 0
+          for x in errors
+            console.error "#{x.level}: #{x.message}: #{x.context} line: #{x.lineNumber}"
+        l.should.equal 0
         done()

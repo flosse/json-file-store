@@ -23,13 +23,13 @@ getObjectFromFileSync = (id) ->
     e
 
 getObjectFromFile = (id, cb) ->
- fs.readFile @_getFileName(id), "utf8", (err, o) ->
-   return cb err if err?
-   try
-     cb null, JSON.parse o
-   catch e
-     console.error e
-     cb e
+  fs.readFile @_getFileName(id), "utf8", (err, o) ->
+    return cb err if err?
+    try
+      cb null, JSON.parse o
+    catch e
+      console.error e
+      cb e
 
 saveObjectToFile = (o, file, cb) ->
   indent = if @_pretty then 2

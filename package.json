@@ -1,48 +1,43 @@
 {
-  "name":         "jfs",
-  "version":      "0.1.7",
-  "main":         "./lib/Store",
-  "description":  "A simple JSON file store",
-  "author":       "Markus Kohlhase <mail@markus-kohlhase.de>",
-  "homepage":     "http://github.com/flosse/json-file-store",
-  "bugs":         "http://github.com/flosse/json-file-store/issues",
-  "licenses":     [{"type": "MIT"}],
-  "engine":       "node",
-  "dependencies":
-  {
-    "mkdirp":           "~0.5.0",
-    "node-uuid":        "~1.4.1",
-    "async":            "~0.9.0",
-    "clone":            "~0.1.15"
+  "name": "jfs",
+  "version": "0.1.7",
+  "main": "./lib/Store",
+  "description": "A simple JSON file store",
+  "author": "Markus Kohlhase <mail@markus-kohlhase.de>",
+  "homepage": "http://github.com/flosse/json-file-store",
+  "bugs": "http://github.com/flosse/json-file-store/issues",
+  "license": "MIT",
+  "engine": "node",
+  "dependencies": {
+    "mkdirp": "~0.5.0",
+    "node-uuid": "~1.4.1",
+    "async": "~0.9.0",
+    "clone": "~0.1.16"
   },
-  "devDependencies":
-  {
-    "mocha":                "~1.19.0",
-    "chai":                 "~1.9.1",
-    "sinon":                "~1.9.1",
-    "sinon-chai":           "~2.5.0",
-    "coveralls":            "~2.10.0",
-    "istanbul":             "~0.2.10",
-    "coffee-script":        "~1.7.1"
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "coffee-script": "~1.7.1",
+    "coffeelint": "~1.5.2",
+    "coveralls": "~2.10.1",
+    "istanbul": "~0.2.11",
+    "mocha": "~1.20.1"
   },
-  "repository":
-  [
+  "repository": [
     {
       "type": "git",
-      "url":  "git://github.com/flosse/json-file-store.git"
+      "url": "git://github.com/flosse/json-file-store.git"
     }
   ],
-  "maintainers":
-  [
+  "maintainers": [
     {
-      "name":   "Markus Kohlhase",
-      "email":  "mail@markus-kohlhase.de",
-      "web":    "http://github.com/flosse/"
+      "name": "Markus Kohlhase",
+      "email": "mail@markus-kohlhase.de",
+      "web": "http://github.com/flosse/"
     }
   ],
   "scripts": {
     "pre-publish": "coffee -o lib/ -c src/*.coffee",
-    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register spec/*.spec.coffee",
+    "test": "./node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script/register spec/*.spec.coffee",
     "coveralls": "istanbul cover ./node_modules/.bin/_mocha --report lcovonly && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   }
 }
