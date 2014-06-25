@@ -7,7 +7,9 @@
   "homepage": "http://github.com/flosse/json-file-store",
   "bugs": "http://github.com/flosse/json-file-store/issues",
   "license": "MIT",
-  "engine": "node",
+  "engines": {
+    "node": ">=0.10"
+  },
   "dependencies": {
     "mkdirp": "~0.5.0",
     "node-uuid": "~1.4.1",
