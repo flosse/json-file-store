@@ -11,14 +11,11 @@ describe "jfs", ->
   NAME = ".specTests"
 
   afterEach (done) ->
-    try
-      fs.unlinkSync NAME + '.json'
-    catch e
-      console.info e.message
-    exec "rm -rf ./#{NAME}", (err, out) ->
-      console.log out
-      console.error err if err?
-      done()
+    fs.unlink NAME + '.json', (err) ->
+      exec "rm -rf ./#{NAME}", (err, out) ->
+        console.log out
+        console.error err if err?
+        done()
 
   it "is a class", ->
     Store.should.be.a.function
@@ -145,10 +142,10 @@ describe "jfs", ->
       }
       """
 
-  describe "single file mode", (done) ->
+  describe "single file db", ->
 
     it "can store data in a single file", (done) ->
-      store = new Store NAME, single: true, pretty:true
+      store = new Store NAME, type:'single', pretty:true
       fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
         content.should.equal "{}"
         d1  = { x: 0.6 }
@@ -225,3 +222,25 @@ describe "jfs", ->
             console.error "#{x.level}: #{x.message}: #{x.context} line: #{x.lineNumber}"
         l.should.equal 0
         done()
+
+  describe "in memory db",->
+
+    it "does not write the data to a file", (done) ->
+      store = new Store NAME, type: 'memory'
+      data  = { y: 78 }
+      store.save "id", data, (err, id) ->
+        should.not.exist err
+        fs.readFile "./#{NAME}/id.json", "utf-8", (err, content) ->
+          should.exist err
+          should.not.exist content
+          store.allSync().should.eql id: y: 78
+          store.saveSync 'foo', { bar: 'baz' }
+          store.all (err, d) ->
+            should.not.exist err
+            d.should.eql
+              foo: bar: 'baz'
+              id: y: 78
+            store.deleteSync 'id'
+            store.allSync().should.eql foo: bar: 'baz'
+            should.throw -> fs.readFileSync "./#{NAME}/id.json", "utf-8"
+            done()

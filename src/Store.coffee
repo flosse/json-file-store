@@ -72,8 +72,10 @@ save = (id, o, cb) ->
     else
       @_cache[id] = o
       if cb? then cb null, id else id
-  if cb? then saveObjectToFile.call @, data, file, done
-  else done saveObjectToFile.call @, data, file
+  if @_memory then done()
+  else
+    if cb? then saveObjectToFile.call @, data, file, done
+    else done saveObjectToFile.call @, data, file
 
 get = (id, cb) ->
   o = clone @_cache[id]
@@ -88,10 +90,12 @@ get = (id, cb) ->
       return if cb? then cb e else e
     @_cache[id] = item
     if cb? then cb null, item else item
-  if cb? then getObjectFromFile.call @, id, done
+  if @_memory then done null, o
   else
-    err = (o = getObjectFromFileSync.call @, id) instanceof Error
-    done err, o
+    if cb? then getObjectFromFile.call @, id, done
+    else
+      err = (o = getObjectFromFileSync.call @, id) instanceof Error
+      done err, o
 
 remove = (id, cb) ->
   file = @_getFileName(id)
@@ -103,29 +107,35 @@ remove = (id, cb) ->
         @_cache[id] = backup
         if cb? then cb err else err
       else cb? null
-    if cb?
-      saveObjectToFile @_cache, file, done
+    if @_memory then done()
     else
-      err = (o = saveObjectToFile @_cache, file) instanceof Error
-      done err, o
+      if cb?
+        saveObjectToFile @_cache, file, done
+      else
+        err = (o = saveObjectToFile @_cache, file) instanceof Error
+        done err, o
   else
     done = (err) =>
       return (if cb? then cb err else err) if err?
       delete @_cache[id]
       if cb? then cb null
-    if cb? then fs.unlink file, done
+    if @_memory then done()
     else
-      try
-        done fs.unlinkSync file
-      catch e
-        done e
+      if cb? then fs.unlink file, done
+      else
+        try
+          done fs.unlinkSync file
+        catch e
+          done e
 
 class Store
 
   constructor: (@name='store', opt={}) ->
 
-    @_single = opt.single is true
+    @_single = opt.single is true or opt.type is 'single'
     @_pretty = opt.pretty is true
+    @_memory = opt.memory is true or opt.type is 'memory'
+
     if isJSONFile @name
       @name = @name.split(".json")[0]
       @_single = true
@@ -135,13 +145,14 @@ class Store
 
     @_cache = {}
 
-    mkdirp.sync @_dir
+    mkdirp.sync @_dir unless @_memory
 
     if @_single
       fn = @_getFileName()
-      if not fs.existsSync fn
-        if fs.writeFileSync fn, "{}", 'utf8'
-          throw new Error "could not create database"
+      unless @_memory
+        unless fs.existsSync fn
+          if fs.writeFileSync fn, "{}", 'utf8'
+            throw new Error "could not create database"
       @_cache = @allSync()
 
   _getFileName: (id) ->
@@ -161,7 +172,8 @@ class Store
   deleteSync: (id) -> remove.call @, id
 
   all: (cb=->) ->
-    if @_single
+    if @_memory then cb null, @_cache
+    else if @_single
       getObjectFromFile.call @, undefined, cb
     else
       readIDs @_dir, (err, ids) =>
@@ -176,6 +188,7 @@ class Store
         async.parallel loaders, (err) -> cb err, all
 
   allSync: ->
+    if @_memory then return @_cache
     if @_single
       db = getObjectFromFileSync.apply @
       throw new Error "could not load database" unless typeof db is "object"
