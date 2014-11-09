@@ -37,7 +37,7 @@ saveObjectToFile = (o, file, cb) ->
     json = JSON.stringify o, null, indent
   catch e
     return if cb? then cb e else e
-  tmpFileName = "#{uuid.v4()}.tmp"
+  tmpFileName = "#{@_getFileName uuid.v4()}.tmp"
   if cb?
     fs.writeFile tmpFileName, json, 'utf8', (err) ->
       return cb err if err
@@ -110,9 +110,9 @@ remove = (id, cb) ->
     if @_memory then done()
     else
       if cb?
-        saveObjectToFile @_cache, file, done
+        saveObjectToFile.call @, @_cache, file, done
       else
-        err = (o = saveObjectToFile @_cache, file) instanceof Error
+        err = (o = saveObjectToFile.call @, @_cache, file) instanceof Error
         done err, o
   else
     done = (err) =>
@@ -156,7 +156,7 @@ class Store
       @_cache = @allSync()
 
   _getFileName: (id) ->
-    if @_single then "#{@_dir}/#{path.basename @name}.json"
+    if @_single then path.join @_dir, (path.basename @name) + ".json"
     else id2fileName id, @_dir
 
   save: (id, o, cb=->) -> save.call @, id, o, cb
