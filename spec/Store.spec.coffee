@@ -21,9 +21,9 @@ describe "jfs", ->
     Store.should.be.a.function
 
   it "resolves the path correctly", ->
-    x = new Store "./foo/bar"
+    x = new Store "./foo/bar", type: 'memory'
     x._dir.should.equal process.cwd() + '/foo/bar'
-    x = new Store __dirname + "/foo/bar"
+    x = new Store __dirname + "/foo/bar", type: 'memory'
     x._dir.should.equal process.cwd() + '/spec/foo/bar'
 
   it "can save an object", (done) ->
@@ -168,6 +168,20 @@ describe "jfs", ->
                 }
                 """
               done()
+
+    ###
+    fs.rename 'overrides' an existing file
+    even if its write protected
+    ###
+    it "it checks for write protection", (done) ->
+      f = path.resolve "#{NAME}/mydb.json"
+      store = new Store f, type:'single'
+      store.saveSync 'id', {some: 'data'}
+      fs.chmodSync(f, '0444')
+      store.save 'foo', bar: 'baz', (err, id) ->
+        should.exist err
+        fs.chmodSync(f, '0644')
+        done()
 
     it "loads an existing db", (done) ->
       store = new Store NAME, single: true

@@ -15,6 +15,29 @@ getIDs = (a) -> a.filter(isJSONFile).map(removeFileExtension)
 readIDsSync = (d) -> getIDs fs.readdirSync d
 readIDs = (d, cb) -> fs.readdir d, (err, ids) -> cb err, getIDs ids
 
+canWrite = (stat) ->
+
+  owner = process.getuid() is stat.uid
+  group = process.getgid() is stat.gid
+
+  owner  and (stat.mode & 128) or # User is owner and owner can write.
+  group  and (stat.mode & 16 ) or # User is in group and group can write.
+             (stat.mode & 2  )    # Anyone can write.
+
+canWriteToFile = (file, cb) ->
+  fs.exists file, (e) ->
+    return cb null unless e
+    fs.stat file, (err, s) ->
+      return cb err if err
+      if canWrite s then cb null
+      else cb new Error "File is protected"
+
+canWriteToFileSync = (file) ->
+  return unless fs.existsSync file
+  fs.statSync file
+  if canWrite s then return
+  else throw new Error "File is protected"
+
 getObjectFromFileSync = (id) ->
   try
     JSON.parse fs.readFileSync (@_getFileName id), "utf8"
@@ -39,11 +62,14 @@ saveObjectToFile = (o, file, cb) ->
     return if cb? then cb e else e
   tmpFileName = "#{@_getFileName uuid.v4()}.tmp"
   if cb?
-    fs.writeFile tmpFileName, json, 'utf8', (err) ->
+    canWriteToFile file, (err) ->
       return cb err if err
-      fs.rename tmpFileName, file, cb
+      fs.writeFile tmpFileName, json, 'utf8', (err) ->
+        return cb err if err
+        fs.rename tmpFileName, file, cb
   else
     try
+      canWriteToFileSync file
       fs.writeFileSync tmpFileName, json, 'utf8'
       fs.renameSync tmpFileName, file
     catch e
@@ -98,7 +124,7 @@ get = (id, cb) ->
       done err, o
 
 remove = (id, cb) ->
-  file = @_getFileName(id)
+  file = @_getFileName id
   if @_single
     backup = @_cache[id]
     delete @_cache[id]
