@@ -76,7 +76,7 @@ db.delete("myId");
 ### Single file DB
 
 If you want to store all objects in a single file,
-set the `type` option to `memory`:
+set the `type` option to `single`:
 
 ```javascript
 var db = new Store("data",{type:'single'});
