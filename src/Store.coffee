@@ -60,7 +60,7 @@ saveObjectToFile = (o, file, cb) ->
     json = JSON.stringify o, null, indent
   catch e
     return if cb? then cb e else e
-  tmpFileName = "#{@_getFileName uuid.v4()}.tmp"
+  tmpFileName = file + uuid.v4() + ".tmp"
   if cb?
     canWriteToFile file, (err) ->
       return cb err if err

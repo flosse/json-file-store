@@ -1,6 +1,6 @@
 {
   "name": "jfs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "main": "./lib/Store",
   "description": "A simple JSON file store",
   "author": "Markus Kohlhase <mail@markus-kohlhase.de>",
@@ -24,12 +24,10 @@
     "istanbul": "~0.3.2",
     "mocha": "~2.0.1"
   },
-  "repository": [
-    {
-      "type": "git",
-      "url": "git://github.com/flosse/json-file-store.git"
-    }
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/flosse/json-file-store.git"
+  },
   "maintainers": [
     {
       "name": "Markus Kohlhase",
