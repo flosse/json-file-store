@@ -34,8 +34,7 @@ canWriteToFile = (file, cb) ->
 
 canWriteToFileSync = (file) ->
   return unless fs.existsSync file
-  fs.statSync file
-  if canWrite s then return
+  if canWrite fs.statSync file then return
   else throw new Error "File is protected"
 
 getObjectFromFileSync = (id) ->
