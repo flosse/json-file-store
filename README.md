@@ -2,9 +2,10 @@
 
 A simple JSON file store for node.js.
 
-[![Build Status](https://secure.travis-ci.org/flosse/json-file-store.png)](http://travis-ci.org/flosse/json-file-store)
-[![Dependency Status](https://gemnasium.com/flosse/json-file-store.png)](https://gemnasium.com/flosse/json-file-store)
-[![NPM version](https://badge.fury.io/js/jfs.png)](http://badge.fury.io/js/jfs)
+[![Build Status](https://secure.travis-ci.org/flosse/json-file-store.svg?branch=master)](http://travis-ci.org/flosse/json-file-store)
+[![Dependency Status](https://gemnasium.com/flosse/json-file-store.svg)](https://gemnasium.com/flosse/json-file-store)
+[![NPM version](https://badge.fury.io/js/jfs.svg)](http://badge.fury.io/js/jfs)
+[![License](https://img.shields.io/npm/l/jfs.svg)](https://github.com/flosse/json-file-store/blob/master/LICENCE.txt)
 
 WARNING:
 Don't use it if you want to persist a large amount of objects.
