@@ -1,6 +1,6 @@
 {
   "name": "jfs",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "main": "./lib/Store",
   "description": "A simple JSON file store",
   "author": "Markus Kohlhase <mail@markus-kohlhase.de>",
@@ -19,10 +19,10 @@
   "devDependencies": {
     "chai": "~1.10.0",
     "coffee-script": "~1.8.0",
-    "coffeelint": "~1.7.1",
+    "coffeelint": "~1.8.1",
     "coveralls": "~2.11.2",
     "istanbul": "~0.3.5",
-    "mocha": "~2.0.1"
+    "mocha": "~2.1.0"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
   "scripts": {
     "lint": "coffeelint src/",
     "prepublish": "coffee -o lib/ -c src/*.coffee",
-    "test": "./node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script/register spec/*.spec.coffee",
+    "test": "npm run lint && ./node_modules/.bin/mocha --reporter spec --compilers coffee:coffee-script/register spec/*.spec.coffee",
     "coveralls": "istanbul cover ./node_modules/.bin/_mocha --report lcovonly && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   }
 }

@@ -40,6 +40,20 @@ describe "jfs", ->
             o.should.eql {}
             done()
 
+  it "can autosave the id", (done) ->
+    store = new Store NAME, saveId: yes
+    store.save {}, (err, id) ->
+      store.get id, (err, o) ->
+        o.id.should.equal id
+        done()
+
+  it "can autosave the id with a custom key", (done) ->
+    store = new Store NAME, saveId: 'myCustomKey'
+    store.save {}, (err, id) ->
+      store.get id, (err, o) ->
+        o.myCustomKey.should.equal id
+        done()
+
   it "can save an object synchronously", ->
     store = new Store NAME
     data  = { s: "ync" }

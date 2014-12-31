@@ -84,6 +84,9 @@ save = (id, o, cb) ->
   id ?= uuid.v4()
   file = @_getFileName id
   o = clone o
+  if @_saveId
+    if (typeof (k=@_saveId)) is 'string' and k.length > 0 then o[k] = id
+    else o.id = id
   data =
     if @_single
       backup = @_cache[id]
@@ -160,6 +163,7 @@ class Store
     @_single = opt.single is true or opt.type is 'single'
     @_pretty = opt.pretty is true
     @_memory = opt.memory is true or opt.type is 'memory'
+    @_saveId = opt.saveId
 
     if isJSONFile @name
       @name = @name.split(".json")[0]

@@ -97,6 +97,17 @@ If you don't want to persist your data, you can set `type` to `memory`:
 var db = new Store("data",{type:'memory'});
 ```
 
+### ID storage
+
+By default the ID is not stored within your object.
+If you like, you can change that behavior by setting `saveId` to `true`
+or a custom ID
+
+```javascript
+var db = new Store("data",{saveId:'myKey'});
+```
+
+
 ## Tests
 
     npm test
