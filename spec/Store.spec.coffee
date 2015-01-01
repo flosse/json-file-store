@@ -146,6 +146,17 @@ describe "jfs", ->
     err = store.deleteSync id
     (-> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").should.throw()
 
+  it "returns an error if the record does not exist", ->
+    store = new Store NAME
+    err = store.deleteSync "blabla"
+    (err instanceof Error).should.be.true
+    store = new Store NAME, type: "single"
+    err = store.deleteSync "blabla"
+    (err instanceof Error).should.be.true
+    store = new Store NAME, type: "memory"
+    err = store.deleteSync "12345"
+    (err instanceof Error).should.be.true
+
   it "can pretty print the file content", ->
     store = new Store NAME, pretty: true
     id = store.saveSync "id", { p: "retty" }

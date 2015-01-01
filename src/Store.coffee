@@ -126,35 +126,28 @@ get = (id, cb) ->
       done err, o
 
 remove = (id, cb) ->
-  file = @_getFileName id
-  if @_single
-    backup = @_cache[id]
+  file        = @_getFileName id
+  cacheBackup = @_cache[id]
+  notInCache  = new Error "#{id} does not exist" unless cacheBackup?
+  done = (err) =>
+    if err?
+      @_cache[id] = cacheBackup
+      return (if cb? then cb err else err)
     delete @_cache[id]
-    done = (err)=>
-      if err?
-        @_cache[id] = backup
-        if cb? then cb err else err
-      else cb? null
-    if @_memory then done()
-    else
-      if cb?
-        saveObjectToFile.call @, @_cache, file, done
-      else
-        err = (o = saveObjectToFile.call @, @_cache, file) instanceof Error
-        done err, o
+    cb?()
+  if @_single
+    delete @_cache[id]
+    return done notInCache if @_memory or notInCache?
+    return saveObjectToFile.call @, @_cache, file, done if cb?
+    err = (o = saveObjectToFile.call @, @_cache, file) instanceof Error
+    done (o if err), (o unless err)
   else
-    done = (err) =>
-      return (if cb? then cb err else err) if err?
-      delete @_cache[id]
-      if cb? then cb null
-    if @_memory then done()
-    else
-      if cb? then fs.unlink file, done
-      else
-        try
-          done fs.unlinkSync file
-        catch e
-          done e
+    return done notInCache if @_memory
+    return fs.unlink file, done if cb?
+    try
+      done fs.unlinkSync file
+    catch e
+      done e
 
 class Store
 
