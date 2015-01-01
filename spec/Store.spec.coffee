@@ -6,7 +6,7 @@ Store     = require "../src/Store"
 should    = chai.should()
 clint     = require "coffeelint"
 
-describe "jfs", ->
+describe "The jfs module", ->
 
   NAME = ".specTests"
 
@@ -26,136 +26,187 @@ describe "jfs", ->
     x = new Store __dirname + "/foo/bar", type: 'memory'
     x._dir.should.equal process.cwd() + '/spec/foo/bar'
 
-  it "can save an object", (done) ->
-    store = new Store NAME
-    data  = { x: 56 }
-    store.save "id", data, (err) ->
-      should.not.exist err
-      fs.readFile "./#{NAME}/id.json", "utf-8", (err, content) ->
-        content.should.equal '{"x":56}'
-        store.save "emptyObj", {}, (err) ->
-          should.not.exist err
-          store.get "emptyObj", (err, o) ->
+  describe "save method", ->
+
+    it "can save an object", (done) ->
+      store = new Store NAME
+      data  = { x: 56 }
+      store.save "id", data, (err) ->
+        should.not.exist err
+        fs.readFile "./#{NAME}/id.json", "utf-8", (err, content) ->
+          content.should.equal '{"x":56}'
+          store.save "emptyObj", {}, (err) ->
             should.not.exist err
-            o.should.eql {}
-            done()
+            store.get "emptyObj", (err, o) ->
+              should.not.exist err
+              o.should.eql {}
+              done()
 
-  it "can autosave the id", (done) ->
-    store = new Store NAME, saveId: yes
-    store.save {}, (err, id) ->
-      store.get id, (err, o) ->
-        o.id.should.equal id
-        done()
+    it "can autosave the id", (done) ->
+      store = new Store NAME, saveId: yes
+      store.save {}, (err, id) ->
+        store.get id, (err, o) ->
+          o.id.should.equal id
+          done()
 
-  it "can autosave the id with a custom key", (done) ->
-    store = new Store NAME, saveId: 'myCustomKey'
-    store.save {}, (err, id) ->
-      store.get id, (err, o) ->
-        o.myCustomKey.should.equal id
-        done()
+    it "can autosave the id with a custom key", (done) ->
+      store = new Store NAME, saveId: 'myCustomKey'
+      store.save {}, (err, id) ->
+        store.get id, (err, o) ->
+          o.myCustomKey.should.equal id
+          done()
 
-  it "can save an object synchronously", ->
-    store = new Store NAME
-    data  = { s: "ync" }
-    id = store.saveSync "id", data
-    id.should.equal "id"
-    content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
-    content.should.equal '{"s":"ync"}'
+    it "can save an object synchronously", ->
+      store = new Store NAME
+      data  = { s: "ync" }
+      id = store.saveSync "id", data
+      id.should.equal "id"
+      content = fs.readFileSync "./#{NAME}/id.json", "utf-8"
+      content.should.equal '{"s":"ync"}'
 
-  it "creates a deep copy for the cache", (done) ->
-    store = new Store NAME + '.json'
-    z = []
-    y = z: z
-    data  =
-      x: 56
-      y:y
-    store.save data, (err, id) ->
-      store.get id, (err, res) ->
-        res.should.eql data
-        res.should.not.equal data
-        res.y.should.eql y
-        res.y.should.not.equal y
-        res.y.z.should.eql z
-        res.y.z.should.not.equal z
-        done()
+    it "creates a deep copy for the cache", (done) ->
+      store = new Store NAME + '.json'
+      z = []
+      y = z: z
+      data  =
+        x: 56
+        y:y
+      store.save data, (err, id) ->
+        store.get id, (err, res) ->
+          res.should.eql data
+          res.should.not.equal data
+          res.y.should.eql y
+          res.y.should.not.equal y
+          res.y.z.should.eql z
+          res.y.z.should.not.equal z
+          done()
 
-  it "can load an object", (done) ->
-    store = new Store NAME
-    data  = { x: 87 }
-    store.save data, (err, id) ->
-      store.get id, (err, o) ->
-        o.x.should.equal 87
-        done()
+  describe "get method", ->
 
-  it "can load an object synchronously", ->
-    store = new Store NAME
-    data  = { x: 87 }
-    id = store.saveSync data
-    o = store.getSync id
-    o.x.should.equal 87
+    it "can load an object", (done) ->
+      store = new Store NAME
+      data  = { x: 87 }
+      store.save data, (err, id) ->
+        store.get id, (err, o) ->
+          o.x.should.equal 87
+          done()
 
-  it "returns an erro if it cannot load an object", (done) ->
-    store = new Store NAME + ".json"
-    store.save "anId", {}, (err, id) ->
-      should.not.exist err
+    it "returns an error if it cannot load an object", (done) ->
+
+      store = new Store NAME
       store.get "foobarobject", (err, o) ->
         err.should.be.truthy
         err.message.should.equal "could not load data"
-        done()
 
-  it "can load all objects", (done) ->
-    store = new Store NAME
-    x1 = { j: 3 }
-    x2 = { k: 4 }
-    store.save x1, (err, id1) ->
-      store.save x2, (err, id2) ->
-        store.all (err, all) ->
-          should.not.exist err
-          all[id1].j.should.equal 3
-          all[id2].k.should.equal 4
-          done()
+        store = new Store NAME, type: "memory"
+        store.get "foobarobject", (err, o) ->
+          err.message.should.equal "could not load data"
 
-  it "can load all objects synchronously",->
-    store = new Store NAME
-    x1 = { j: 3 }
-    x2 = { k: 4 }
-    id1 = store.saveSync x1
-    id2 = store.save x2
-    all = store.allSync()
-    (all instanceof Error).should.be.falsy
-    all[id1].j.should.equal 3
-    all[id2].k.should.equal 4
-
-  it "can delete an object", (done) ->
-    store = new Store NAME
-    data  = { y: 88 }
-    store.save data, (err, id) ->
-      fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
-        content.should.not.eql ""
-        store.delete id, (err) ->
-          fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
-            err.should.exist
+          store = new Store NAME, type: "single"
+          store.get "foobarobject", (err, o) ->
+            err.message.should.equal "could not load data"
             done()
 
-  it "can delete an synchonously", ->
-    store = new Store NAME
-    data  = { y: 88 }
-    id = store.saveSync data
-    content = fs.readFileSync "./#{NAME}/#{id}.json", "utf-8"
-    content.should.not.eql ""
-    err = store.deleteSync id
-    (-> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").should.throw()
+  describe "getSync method", ->
 
-  it "returns an error if the record does not exist", ->
-    store = new Store NAME
-    err = store.deleteSync "blabla"
-    (err instanceof Error).should.be.true
-    store = new Store NAME, type: "single"
-    err = store.deleteSync "blabla"
-    (err instanceof Error).should.be.true
-    store = new Store NAME, type: "memory"
-    err = store.deleteSync "12345"
-    (err instanceof Error).should.be.true
+    it "can load an object synchronously", ->
+      store = new Store NAME
+      data  = { x: 87 }
+      id = store.saveSync data
+      o = store.getSync id
+      o.x.should.equal 87
+
+
+    it "returns an error if it cannot load an object", ->
+
+      store = new Store NAME
+      err = store.getSync "foobarobject"
+      err.should.be.truthy
+      err.message.should.equal "could not load data"
+
+      store = new Store NAME, type: "memory"
+      err = store.getSync "foobarobject"
+      err.message.should.equal "could not load data"
+
+      store = new Store NAME, type: "single"
+      err = store.getSync "foobarobject"
+      err.message.should.equal "could not load data"
+
+
+  describe "getAll method", ->
+
+    it "can load all objects", (done) ->
+      store = new Store NAME
+      x1 = { j: 3 }
+      x2 = { k: 4 }
+      store.save x1, (err, id1) ->
+        store.save x2, (err, id2) ->
+          store.all (err, all) ->
+            should.not.exist err
+            all[id1].j.should.equal 3
+            all[id2].k.should.equal 4
+            done()
+
+    it "can load all objects synchronously",->
+      store = new Store NAME
+      x1 = { j: 3 }
+      x2 = { k: 4 }
+      id1 = store.saveSync x1
+      id2 = store.save x2
+      all = store.allSync()
+      (all instanceof Error).should.be.falsy
+      all[id1].j.should.equal 3
+      all[id2].k.should.equal 4
+
+  describe "delete method", ->
+
+    it "can delete an object", (done) ->
+      store = new Store NAME
+      data  = { y: 88 }
+      store.save data, (err, id) ->
+        fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
+          content.should.not.eql ""
+          store.delete id, (err) ->
+            fs.readFile "./#{NAME}/#{id}.json", "utf-8", (err, content) ->
+              err.should.exist
+              done()
+
+    it "returns an error if the record does not exist", (done) ->
+      store = new Store NAME
+      store.delete "blabla", (err) ->
+        (err instanceof Error).should.be.true
+
+        store = new Store NAME, type: "single"
+        store.delete "blabla", (err) ->
+          (err instanceof Error).should.be.true
+
+          store = new Store NAME, type: "memory"
+          store.delete "blabla", (err) ->
+            (err instanceof Error).should.be.true
+            done()
+
+  describe "deleteSync method", ->
+
+    it "can delete an object synchonously", ->
+      store = new Store NAME
+      data  = { y: 88 }
+      id = store.saveSync data
+      content = fs.readFileSync "./#{NAME}/#{id}.json", "utf-8"
+      content.should.not.eql ""
+      err = store.deleteSync id
+      should.not.exist err
+      (-> fs.readFileSync "./#{NAME}/#{id}.json", "utf-8").should.throw()
+
+    it "returns an error if the record does not exist", ->
+      store = new Store NAME
+      err = store.deleteSync "blabla"
+      (err instanceof Error).should.be.true
+      store = new Store NAME, type: "single"
+      err = store.deleteSync "blabla"
+      (err instanceof Error).should.be.true
+      store = new Store NAME, type: "memory"
+      err = store.deleteSync "12345"
+      (err instanceof Error).should.be.true
 
   it "can pretty print the file content", ->
     store = new Store NAME, pretty: true
@@ -167,9 +218,9 @@ describe "jfs", ->
       }
       """
 
-  describe "single file db", ->
+  describe "'single' mode", ->
 
-    it "can store data in a single file", (done) ->
+    it "stores data in a single file", (done) ->
       store = new Store NAME, type:'single', pretty:true
       fs.readFile "./#{NAME}.json", "utf-8", (err, content) ->
         content.should.equal "{}"
@@ -249,7 +300,7 @@ describe "jfs", ->
         content.should.equal "{}"
         done()
 
-  describe "in memory db",->
+  describe "'memory' mode",->
 
     it "does not write the data to a file", (done) ->
       store = new Store NAME, type: 'memory'
