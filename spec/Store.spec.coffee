@@ -249,19 +249,6 @@ describe "jfs", ->
         content.should.equal "{}"
         done()
 
-  describe "source code", ->
-
-    it "is clean", (done) ->
-      fs.readFile path.join(__dirname, "../src/Store.coffee"), "utf8", (err, code) ->
-        should.not.exist err
-        errors = clint.lint code
-        l = errors.length
-        unless l is 0
-          for x in errors
-            console.error "#{x.level}: #{x.message}: #{x.context} line: #{x.lineNumber}"
-        l.should.equal 0
-        done()
-
   describe "in memory db",->
 
     it "does not write the data to a file", (done) ->
