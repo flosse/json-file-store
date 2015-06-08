@@ -45,7 +45,7 @@ getObjectFromFileSync = (id) ->
 
 getObjectFromFile = (id, cb) ->
   fs.readFile @_getFileName(id), "utf8", (err, o) ->
-    return cb err if err?
+    return cb err if err
     try
       cb null, JSON.parse o
     catch e
@@ -92,7 +92,7 @@ save = (id, o, cb) ->
       @_cache
     else o
   done = (err) =>
-    if err?
+    if err
       @_cache[id] = backup if @_single
       if cb? then cb err else err
     else
@@ -111,24 +111,22 @@ get = (id, cb) ->
       e = new Error "could not load data"
       return if cb? then cb e else e
     item = if @_single then o[id] else o
-    if not item?
+    unless item?
       e = new Error "could not load data"
       return if cb? then cb e else e
     @_cache[id] = item
     if cb? then cb null, item else item
-  if @_memory then done null, o
-  else
-    if cb? then getObjectFromFile.call @, id, done
-    else
-      err = (o = getObjectFromFileSync.call @, id) instanceof Error
-      done err, o
+  return done null, o if @_memory
+  return getObjectFromFile.call @, id, done if cb?
+  err = (o = getObjectFromFileSync.call @, id) instanceof Error
+  done (o if err), (o unless err)
 
 remove = (id, cb) ->
   file        = @_getFileName id
   cacheBackup = @_cache[id]
   notInCache  = new Error "#{id} does not exist" unless cacheBackup?
   done = (err) =>
-    if err?
+    if err
       @_cache[id] = cacheBackup
       return (if cb? then cb err else err)
     delete @_cache[id]
@@ -197,13 +195,13 @@ class Store
       getObjectFromFile.call @, undefined, cb
     else
       readIDs @_dir, (err, ids) =>
-        return cb err if err?
+        return cb err if er?
         that = @
         all  = {}
         loaders = for id in ids then do (id) ->
           (cb) ->
             that.get id, (err, o) ->
-              all[id] = o if not err?
+              all[id] = o unless err
               cb err
         async.parallel loaders, (err) -> cb err, all
 
