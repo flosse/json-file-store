@@ -1,6 +1,6 @@
 {
   "name": "jfs",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "main": "./lib/Store",
   "description": "A simple JSON file store",
   "author": "Markus Kohlhase <mail@markus-kohlhase.de>",
