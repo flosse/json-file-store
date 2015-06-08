@@ -1,5 +1,5 @@
 ###
-Copyright (C) 2012 - 2014 Markus Kohlhase <mail@markus-kohlhase.de>
+Copyright (C) 2012 - 2015 Markus Kohlhase <mail@markus-kohlhase.de>
 ###
 
 async  = require 'async'
@@ -41,7 +41,6 @@ getObjectFromFileSync = (id) ->
   try
     JSON.parse fs.readFileSync (@_getFileName id), "utf8"
   catch e
-    console.error e
     e
 
 getObjectFromFile = (id, cb) ->
@@ -50,7 +49,6 @@ getObjectFromFile = (id, cb) ->
     try
       cb null, JSON.parse o
     catch e
-      console.error e
       cb e
 
 saveObjectToFile = (o, file, cb) ->
