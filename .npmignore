@@ -1,6 +1,5 @@
 src/
 spec/
-buster.js
 .gitignore
 .npmignore
 .travis.yml
