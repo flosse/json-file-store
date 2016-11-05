@@ -8,7 +8,7 @@
 
   chai = require("chai");
 
-  Store = require("../lib/Store");
+  Store = require("./Store");
 
   exec = require('child_process').exec;
 
@@ -40,7 +40,7 @@
       x = new Store(__dirname + "/foo/bar", {
         type: 'memory'
       });
-      return x._dir.should.equal(process.cwd() + '/spec/foo/bar');
+      return x._dir.should.equal(process.cwd() + '/foo/bar');
     });
     describe("save method", function() {
       it("can save an object", function(done) {
