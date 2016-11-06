@@ -17,6 +17,9 @@
     "clone": "~2.0.0"
   },
   "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.18.0",
+    "babel-preset-es2015": "^6.18.0",
     "chai": "~3.5.0",
     "coveralls": "~2.11.14",
     "istanbul": "~0.4.5",
@@ -35,7 +38,9 @@
   ],
   "scripts": {
     "lint": "echo \"WARN: no linting process specified\"",
-    "test": "npm run lint && ./node_modules/.bin/mocha --reporter spec *.spec.js",
+    "build": "babel Store.es6.js -o Store.js",
+    "prepublish": "npm run build",
+    "test": "npm run lint && npm run build && ./node_modules/.bin/mocha --reporter spec *.spec.js",
     "coveralls": "istanbul cover ./node_modules/.bin/_mocha --report lcovonly && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   }
 }

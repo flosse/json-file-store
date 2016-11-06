@@ -4,61 +4,50 @@ Copyright (C) 2012 - 2016 Markus Kohlhase <mail@markus-kohlhase.de>
 
 "use strict";
 
-var async   = require('async');
-var fs      = require('fs');
-var path    = require('path');
-var uuid    = require('node-uuid');
-var mkdirp  = require('mkdirp');
-var clone   = require('clone');
+import async  from 'async';
+import fs     from 'fs';
+import path   from 'path';
+import uuid   from 'node-uuid';
+import mkdirp from 'mkdirp';
+import clone  from 'clone';
 
-var isJSONFile = function(f) {
-  return f.substr(-5) === ".json";
-};
+const isJSONFile = f => f.substr(-5) === ".json";
 
-var removeFileExtension = function(f) {
-  return f.split(".json")[0];
-};
+const removeFileExtension = f => f.split(".json")[0];
 
-var getIDs = function(a) {
-  return a.filter(isJSONFile).map(removeFileExtension);
-};
+const getIDs = a => a.filter(isJSONFile).map(removeFileExtension);
 
-var readIDsSync = function(d) {
-  return getIDs(fs.readdirSync(d));
-};
+const readIDsSync = d => getIDs(fs.readdirSync(d));
 
-var readIDs = function(d, cb) {
-  return fs.readdir(d, function(err, ids) {
-    return cb(err, getIDs(ids));
-  });
-};
+const readIDs = (d, cb) => fs.readdir(d, (err, ids) => {
+  cb(err, getIDs(ids));
+});
 
-var canWrite = function(stat) {
-  var group, owner;
-  owner = (typeof process.getuid === "function" ? process.getuid() : void 0) === stat.uid;
-  group = (typeof process.getgid === "function" ? process.getgid() : void 0) === stat.gid;
+const canWrite = stat => {
+  const owner = (typeof process.getuid === "function" ? process.getuid() : void 0) === stat.uid;
+  const group = (typeof process.getgid === "function" ? process.getgid() : void 0) === stat.gid;
   return owner && (stat.mode & 128) || group && (stat.mode & 16) || (stat.mode & 2);
 };
 
-var canWriteToFile = function(file, cb) {
-  return fs.exists(file, function(e) {
+const canWriteToFile = (file, cb) => {
+  fs.exists(file, (e) => {
     if (!e) {
       return cb(null);
     }
-    return fs.stat(file, function(err, s) {
+    fs.stat(file, (err, s) => {
       if (err) {
         return cb(err);
       }
       if (canWrite(s)) {
-        return cb(null);
+        cb(null);
       } else {
-        return cb(new Error("File is protected"));
+        cb(new Error("File is protected"));
       }
     });
   });
 };
 
-var canWriteToFileSync = function(file) {
+const canWriteToFileSync = file => {
   if (!fs.existsSync(file)) {
     return;
   }
@@ -69,55 +58,50 @@ var canWriteToFileSync = function(file) {
   }
 };
 
-var getObjectFromFileSync = function(id) {
-  var e;
+const getObjectFromFileSync = function(id) {
   try {
     return JSON.parse(fs.readFileSync(this._getFileName(id), "utf8"));
   } catch (error) {
-    e = error;
-    return e;
+    return error;
   }
 };
 
-var getObjectFromFile = function(id, cb) {
-  return fs.readFile(this._getFileName(id), "utf8", function(err, o) {
-    var e;
+const getObjectFromFile = function(id, cb) {
+  fs.readFile(this._getFileName(id), "utf8", (err, o) => {
     if (err) {
       return cb(err);
     }
     try {
-      return cb(null, JSON.parse(o));
+      cb(null, JSON.parse(o));
     } catch (error) {
-      e = error;
-      return cb(e);
+      cb(error);
     }
   });
 };
 
-var saveObjectToFile = function(o, file, cb) {
-  var e, indent, json, tmpFileName;
-  indent = this._pretty ? 2 : void 0;
+const saveObjectToFile = function(o, file, cb) {
+  var json;
+  const indent = this._pretty ? 2 : void 0;
   try {
     json = JSON.stringify(o, null, indent);
   } catch (error) {
-    e = error;
     if (cb != null) {
-      return cb(e);
+      return cb(error);
     } else {
-      return e;
+      return error;
     }
   }
-  tmpFileName = file + uuid.v4() + ".tmp";
+  var tmpFileName = file + uuid.v4() + ".tmp";
   if (cb != null) {
-    return canWriteToFile(file, function(err) {
+    canWriteToFile(file, (err) => {
       if (err) {
         return cb(err);
       }
-      return fs.writeFile(tmpFileName, json, 'utf8', function(err) {
+      fs.writeFile(tmpFileName, json, 'utf8', (err) => {
         if (err) {
           return cb(err);
         }
-        return fs.rename(tmpFileName, file, cb);
+        fs.rename(tmpFileName, file, cb);
       });
     });
   } else {
@@ -126,18 +110,15 @@ var saveObjectToFile = function(o, file, cb) {
       fs.writeFileSync(tmpFileName, json, 'utf8');
       return fs.renameSync(tmpFileName, file);
     } catch (error) {
-      e = error;
-      return e;
+      return error;
     }
   }
 };
 
-var id2fileName = function(id, dir) {
-  return path.join(dir, id + ".json");
-};
+const id2fileName = (id, dir) => path.join(dir, id + ".json");
 
-var save = function(id, o, cb) {
-  var backup, data, done, file, k;
+const save = function(id, o, cb) {
+  var backup, k;
   if (typeof id === "object") {
     cb = o;
     o = id;
@@ -146,7 +127,7 @@ var save = function(id, o, cb) {
   if (id == null) {
     id = uuid.v4();
   }
-  file = this._getFileName(id);
+  const file = this._getFileName(id);
   o = clone(o);
   if (this._saveId) {
     if ((typeof (k = this._saveId)) === 'string' && k.length > 0) {
@@ -155,46 +136,49 @@ var save = function(id, o, cb) {
       o.id = id;
     }
   }
-  data = this._single ? (backup = this._cache[id], this._cache[id] = o, this._cache) : o;
-  done = (function(_this) {
-    return function(err) {
+
+  const data = this._single ? (backup = this._cache[id], this._cache[id] = o, this._cache) : o;
+
+  const done = (function(_this) {
+    return (err) => {
       if (err) {
         if (_this._single) {
           _this._cache[id] = backup;
         }
         if (cb != null) {
-          return cb(err);
+          cb(err);
         } else {
           return err;
         }
       } else {
         _this._cache[id] = o;
         if (cb != null) {
-          return cb(null, id);
+          cb(null, id);
         } else {
           return id;
         }
       }
     };
   })(this);
+
   if (this._memory) {
     return done();
   } else {
     if (cb != null) {
-      return saveObjectToFile.call(this, data, file, done);
+      saveObjectToFile.call(this, data, file, done);
     } else {
       return done(saveObjectToFile.call(this, data, file));
     }
   }
 };
 
-var get = function(id, cb) {
-  var done, err, o;
+const get = function(id, cb) {
+  var err, o;
   o = clone(this._cache[id]);
   if (o != null) {
     return (cb != null ? cb(null, o) : o);
   }
-  done = (function(_this) {
+  const done = (function(_this) {
     return function(err, o) {
       var e, item;
       if (err) {
@@ -232,14 +216,14 @@ var get = function(id, cb) {
   return done((err ? o : void 0), (!err ? o : void 0));
 };
 
-var remove = function(id, cb) {
-  var cacheBackup, done, e, err, file, notInCache, o;
-  file = this._getFileName(id);
+const remove = function(id, cb) {
+  var cacheBackup, e, err, notInCache, o;
+  const file = this._getFileName(id);
   cacheBackup = this._cache[id];
   if (cacheBackup == null) {
     notInCache = new Error(id + " does not exist");
   }
-  done = (function(_this) {
+  const done = (function(_this) {
     return function(err) {
       if (err) {
         _this._cache[id] = cacheBackup;
@@ -275,9 +259,9 @@ var remove = function(id, cb) {
   }
 };
 
-var Store = (function() {
-  function Store(name, opt) {
-    var fn;
+class Store {
+
+  constructor(name, opt) {
     this.name = name != null ? name : 'store';
     if (opt == null) {
       opt = {};
@@ -299,7 +283,7 @@ var Store = (function() {
       mkdirp.sync(this._dir);
     }
     if (this._single) {
-      fn = this._getFileName();
+      const fn = this._getFileName();
       if (!this._memory) {
         if (!fs.existsSync(fn)) {
           if (fs.writeFileSync(fn, "{}", 'utf8')) {
@@ -311,45 +295,47 @@ var Store = (function() {
     }
   }
 
-  Store.prototype._getFileName = function(id) {
+  _getFileName(id) {
     if (this._single) {
       return path.join(this._dir, (path.basename(this.name)) + ".json");
     } else {
       return id2fileName(id, this._dir);
     }
-  };
+  }
 
-  Store.prototype.save = function(id, o, cb) {
+
+
+  save(id, o, cb) {
     if (cb == null) {
       cb = function() {};
     }
     return save.call(this, id, o, cb);
   };
 
-  Store.prototype.saveSync = function(id, o) {
+  saveSync(id, o) {
     return save.call(this, id, o);
   };
 
-  Store.prototype.get = function(id, cb) {
+  get(id, cb) {
     if (cb == null) {
       cb = function() {};
     }
     return get.call(this, id, cb);
   };
 
-  Store.prototype.getSync = function(id) {
+  getSync(id) {
     return get.call(this, id);
   };
 
-  Store.prototype["delete"] = function(id, cb) {
+  delete(id, cb) {
     return remove.call(this, id, cb);
   };
 
-  Store.prototype.deleteSync = function(id) {
+  deleteSync(id) {
     return remove.call(this, id);
   };
 
-  Store.prototype.all = function(cb) {
+  all(cb) {
     if (cb == null) {
       cb = function() {};
     }
@@ -392,7 +378,7 @@ var Store = (function() {
     }
   };
 
-  Store.prototype.allSync = function() {
+  allSync() {
     var db, f, i, item, len, objects, ref;
     if (this._memory) {
       return this._cache;
@@ -417,10 +403,8 @@ var Store = (function() {
       }
       return objects;
     }
-  };
+  }
 
-  return Store;
-
-})();
+}
 
 module.exports = Store;
