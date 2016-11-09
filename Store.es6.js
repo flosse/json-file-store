@@ -23,41 +23,6 @@ const readIDs = (d, cb) => fs.readdir(d, (err, ids) => {
   cb(err, getIDs(ids));
 });
 
-const canWrite = stat => {
-  const owner = (typeof process.getuid === "function" ? process.getuid() : void 0) === stat.uid;
-  const group = (typeof process.getgid === "function" ? process.getgid() : void 0) === stat.gid;
-  return owner && (stat.mode & 128) || group && (stat.mode & 16) || (stat.mode & 2);
-};
-
-const canWriteToFile = (file, cb) => {
-  fs.exists(file, (e) => {
-    if (!e) {
-      return cb(null);
-    }
-    fs.stat(file, (err, s) => {
-      if (err) {
-        return cb(err);
-      }
-      if (canWrite(s)) {
-        cb(null);
-      } else {
-        cb(new Error("File is protected"));
-      }
-    });
-  });
-};
-
-const canWriteToFileSync = file => {
-  if (!fs.existsSync(file)) {
-    return;
-  }
-  if (canWrite(fs.statSync(file))) {
-
-  } else {
-    throw new Error("File is protected");
-  }
-};
-
 const getObjectFromFileSync = function(id) {
   try {
     return JSON.parse(fs.readFileSync(this._getFileName(id), "utf8"));
@@ -91,24 +56,12 @@ const saveObjectToFile = function(o, file, cb) {
       return error;
     }
   }
-  var tmpFileName = file + uuid.v4() + ".tmp";
+
   if (cb != null) {
-    canWriteToFile(file, (err) => {
-      if (err) {
-        return cb(err);
-      }
-      fs.writeFile(tmpFileName, json, 'utf8', (err) => {
-        if (err) {
-          return cb(err);
-        }
-        fs.rename(tmpFileName, file, cb);
-      });
-    });
+    fs.writeFile(file, json, 'utf8', cb);
   } else {
     try {
-      canWriteToFileSync(file);
-      fs.writeFileSync(tmpFileName, json, 'utf8');
-      return fs.renameSync(tmpFileName, file);
+      return fs.writeFileSync(file, json, 'utf8');
     } catch (error) {
       return error;
     }
