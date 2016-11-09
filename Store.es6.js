@@ -44,6 +44,26 @@ const getObjectFromFile = function(id, cb) {
   });
 };
 
+const canWriteToFile = (file, cb) => {
+  fs.access(file, fs.constants.F_OK, (err) => {
+    if (err) {
+      return cb(null);
+    }
+
+    fs.access(file, fs.constants.W_OK, cb);
+  });
+};
+
+const canWriteToFileSync = (file) => {
+  try {
+    fs.accessSync(file, fs.constants.F_OK);
+  } catch (err) {
+    return;
+  }
+
+  fs.accessSync(file, fs.constants.W_OK);
+};
+
 const saveObjectToFile = function(o, file, cb) {
   var json;
   const indent = this._pretty ? 2 : void 0;
@@ -57,11 +77,26 @@ const saveObjectToFile = function(o, file, cb) {
     }
   }
 
+  const tmpFileName = file + uuid.v4() + ".tmp";
   if (cb != null) {
-    fs.writeFile(file, json, 'utf8', cb);
+    canWriteToFile(file, (err) => {
+      if (err) {
+        return cb(err);
+      }
+
+      fs.writeFile(tmpFileName, json, 'utf8', (err) => {
+        if (err) {
+          return cb(err);
+        }
+
+        fs.rename(tmpFileName, file, cb);
+      });
+    });
   } else {
     try {
-      return fs.writeFileSync(file, json, 'utf8');
+      canWriteToFileSync(file);
+      fs.writeFileSync(tmpFileName, json, 'utf8');
+      fs.renameSync(tmpFileName, file);
     } catch (error) {
       return error;
     }
