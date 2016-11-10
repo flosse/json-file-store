@@ -44,24 +44,27 @@ const getObjectFromFile = function(id, cb) {
   });
 };
 
+const FILE_EXISTS = fs.constants ? fs.constants.F_OK : fs.F_OK;
+const FILE_IS_WRITABLE = fs.constants ? fs.constants.W_OK : fs.W_OK;
+
 const canWriteToFile = (file, cb) => {
-  fs.access(file, fs.constants.F_OK, (err) => {
+  fs.access(file, FILE_EXISTS, (err) => {
     if (err) {
       return cb(null);
     }
 
-    fs.access(file, fs.constants.W_OK, cb);
+    fs.access(file, FILE_IS_WRITABLE, cb);
   });
 };
 
 const canWriteToFileSync = (file) => {
   try {
-    fs.accessSync(file, fs.constants.F_OK);
+    fs.accessSync(file, FILE_EXISTS);
   } catch (err) {
     return;
   }
 
-  fs.accessSync(file, fs.constants.W_OK);
+  fs.accessSync(file, FILE_IS_WRITABLE);
 };
 
 const saveObjectToFile = function(o, file, cb) {
