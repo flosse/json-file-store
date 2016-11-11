@@ -23,41 +23,6 @@ const readIDs = (d, cb) => fs.readdir(d, (err, ids) => {
   cb(err, getIDs(ids));
 });
 
-const canWrite = stat => {
-  const owner = (typeof process.getuid === "function" ? process.getuid() : void 0) === stat.uid;
-  const group = (typeof process.getgid === "function" ? process.getgid() : void 0) === stat.gid;
-  return owner && (stat.mode & 128) || group && (stat.mode & 16) || (stat.mode & 2);
-};
-
-const canWriteToFile = (file, cb) => {
-  fs.exists(file, (e) => {
-    if (!e) {
-      return cb(null);
-    }
-    fs.stat(file, (err, s) => {
-      if (err) {
-        return cb(err);
-      }
-      if (canWrite(s)) {
-        cb(null);
-      } else {
-        cb(new Error("File is protected"));
-      }
-    });
-  });
-};
-
-const canWriteToFileSync = file => {
-  if (!fs.existsSync(file)) {
-    return;
-  }
-  if (canWrite(fs.statSync(file))) {
-
-  } else {
-    throw new Error("File is protected");
-  }
-};
-
 const getObjectFromFileSync = function(id) {
   try {
     return JSON.parse(fs.readFileSync(this._getFileName(id), "utf8"));
@@ -79,6 +44,29 @@ const getObjectFromFile = function(id, cb) {
   });
 };
 
+const FILE_EXISTS = fs.constants ? fs.constants.F_OK : fs.F_OK;
+const FILE_IS_WRITABLE = fs.constants ? fs.constants.W_OK : fs.W_OK;
+
+const canWriteToFile = (file, cb) => {
+  fs.access(file, FILE_EXISTS, (err) => {
+    if (err) {
+      return cb(null);
+    }
+
+    fs.access(file, FILE_IS_WRITABLE, cb);
+  });
+};
+
+const canWriteToFileSync = (file) => {
+  try {
+    fs.accessSync(file, FILE_EXISTS);
+  } catch (err) {
+    return;
+  }
+
+  fs.accessSync(file, FILE_IS_WRITABLE);
+};
+
 const saveObjectToFile = function(o, file, cb) {
   var json;
   const indent = this._pretty ? 2 : void 0;
@@ -91,16 +79,19 @@ const saveObjectToFile = function(o, file, cb) {
       return error;
     }
   }
-  var tmpFileName = file + uuid.v4() + ".tmp";
+
+  const tmpFileName = file + uuid.v4() + ".tmp";
   if (cb != null) {
     canWriteToFile(file, (err) => {
       if (err) {
         return cb(err);
       }
+
       fs.writeFile(tmpFileName, json, 'utf8', (err) => {
         if (err) {
           return cb(err);
         }
+
         fs.rename(tmpFileName, file, cb);
       });
     });
@@ -108,7 +99,7 @@ const saveObjectToFile = function(o, file, cb) {
     try {
       canWriteToFileSync(file);
       fs.writeFileSync(tmpFileName, json, 'utf8');
-      return fs.renameSync(tmpFileName, file);
+      fs.renameSync(tmpFileName, file);
     } catch (error) {
       return error;
     }
