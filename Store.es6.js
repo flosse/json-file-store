@@ -2,8 +2,6 @@
 Copyright (C) 2012 - 2016 Markus Kohlhase <mail@markus-kohlhase.de>
  */
 
-"use strict";
-
 import async  from 'async';
 import fs     from 'fs';
 import path   from 'path';
@@ -19,9 +17,9 @@ const getIDs = a => a.filter(isJSONFile).map(removeFileExtension);
 
 const readIDsSync = d => getIDs(fs.readdirSync(d));
 
-const readIDs = (d, cb) => fs.readdir(d, (err, ids) => {
-  cb(err, getIDs(ids));
-});
+const readIDs = (d, cb) => fs.readdir(d, (err, ids) =>
+  cb(err, getIDs(ids))
+);
 
 const getObjectFromFileSync = function(id) {
   try {
@@ -49,10 +47,7 @@ const FILE_IS_WRITABLE = fs.constants ? fs.constants.W_OK : fs.W_OK;
 
 const canWriteToFile = (file, cb) => {
   fs.access(file, FILE_EXISTS, (err) => {
-    if (err) {
-      return cb(null);
-    }
-
+    if (err) return cb(null);
     fs.access(file, FILE_IS_WRITABLE, cb);
   });
 };
@@ -68,8 +63,8 @@ const canWriteToFileSync = (file) => {
 };
 
 const saveObjectToFile = function(o, file, cb) {
-  var json;
   const indent = this._pretty ? 2 : void 0;
+  let json;
   try {
     json = JSON.stringify(o, null, indent);
   } catch (error) {
@@ -81,16 +76,13 @@ const saveObjectToFile = function(o, file, cb) {
   }
 
   const tmpFileName = file + uuid.v4() + ".tmp";
+
   if (cb != null) {
     canWriteToFile(file, (err) => {
-      if (err) {
-        return cb(err);
-      }
+      if (err) return cb(err);
 
       fs.writeFile(tmpFileName, json, 'utf8', (err) => {
-        if (err) {
-          return cb(err);
-        }
+        if (err) return cb(err);
 
         fs.rename(tmpFileName, file, cb);
       });
@@ -109,7 +101,7 @@ const saveObjectToFile = function(o, file, cb) {
 const id2fileName = (id, dir) => path.join(dir, id + ".json");
 
 const save = function(id, o, cb) {
-  var backup, k;
+  let backup, k;
   if (typeof id === "object") {
     cb = o;
     o = id;
@@ -152,28 +144,25 @@ const save = function(id, o, cb) {
     };
   })(this);
 
-  if (this._memory) {
-    return done();
+  if (this._memory) return done();
+
+  if (cb != null) {
+    saveObjectToFile.call(this, data, file, done);
   } else {
-    if (cb != null) {
-      saveObjectToFile.call(this, data, file, done);
-    } else {
-      return done(saveObjectToFile.call(this, data, file));
-    }
+    return done(saveObjectToFile.call(this, data, file));
   }
 };
 
 const get = function(id, cb) {
-  var err, o;
-  o = clone(this._cache[id]);
+  let o = clone(this._cache[id]);
   if (o != null) {
     return (cb != null ? cb(null, o) : o);
   }
-  const done = (function(_this) {
-    return function(err, o) {
-      var e, item;
+  const done = ((_this) => {
+    return (err, o) => {
+      let e, item;
       if (err) {
-        e = new Error("could not load data");
+        const e = new Error("could not load data");
         if (cb != null) {
           return cb(e);
         } else {
@@ -197,25 +186,25 @@ const get = function(id, cb) {
       }
     };
   })(this);
-  if (this._memory) {
-    return done(null, o);
-  }
-  if (cb != null) {
-    return getObjectFromFile.call(this, id, done);
-  }
-  err = (o = getObjectFromFileSync.call(this, id)) instanceof Error;
+
+  if (this._memory) return done(null, o);
+
+  if (cb != null) return getObjectFromFile.call(this, id, done);
+
+  const err = (o = getObjectFromFileSync.call(this, id)) instanceof Error;
+
   return done((err ? o : void 0), (!err ? o : void 0));
 };
 
 const remove = function(id, cb) {
-  var cacheBackup, e, err, notInCache, o;
+  let e, err, notInCache, o;
   const file = this._getFileName(id);
-  cacheBackup = this._cache[id];
+  const cacheBackup = this._cache[id];
   if (cacheBackup == null) {
     notInCache = new Error(id + " does not exist");
   }
-  const done = (function(_this) {
-    return function(err) {
+  const done = ((_this) => {
+    return (err) => {
       if (err) {
         _this._cache[id] = cacheBackup;
         return (cb != null ? cb(err) : err);
@@ -224,58 +213,62 @@ const remove = function(id, cb) {
       return typeof cb === "function" ? cb() : void 0;
     };
   })(this);
+
   if (this._single) {
     delete this._cache[id];
     if (this._memory || (notInCache != null)) {
       return done(notInCache);
     }
+
     if (cb != null) {
       return saveObjectToFile.call(this, this._cache, file, done);
     }
+
     err = (o = saveObjectToFile.call(this, this._cache, file)) instanceof Error;
     return done((err ? o : void 0), (!err ? o : void 0));
-  } else {
-    if (this._memory) {
-      return done(notInCache);
-    }
-    if (cb != null) {
-      return fs.unlink(file, done);
-    }
-    try {
-      return done(fs.unlinkSync(file));
-    } catch (error) {
-      e = error;
-      return done(e);
-    }
+  }
+
+  if (this._memory) return done(notInCache);
+
+  if (cb != null) return fs.unlink(file, done);
+
+  try {
+    return done(fs.unlinkSync(file));
+  } catch (error) {
+    return done(error);
   }
 };
 
 class Store {
 
-  constructor(name, opt) {
-    this.name = name != null ? name : 'store';
-    if (opt == null) {
-      opt = {};
-    }
+  constructor(name = 'store', opt = {}) {
+
+    this.name = name;
     this._single = opt.single === true || opt.type === 'single';
     this._pretty = opt.pretty === true;
     this._memory = opt.memory === true || opt.type === 'memory';
     this._saveId = opt.saveId;
+
     if (isJSONFile(this.name)) {
       this.name = this.name.split(".json")[0];
       this._single = true;
     }
+
     this._dir = path.resolve(this.name);
+
     if (this._single) {
       this._dir = path.dirname(this._dir);
     }
+
     this._cache = {};
+
     if (!this._memory) {
       mkdirp.sync(this._dir);
     }
+
     if (this._single) {
-      const fn = this._getFileName();
       if (!this._memory) {
+        const fn = this._getFileName();
         if (!fs.existsSync(fn)) {
           if (fs.writeFileSync(fn, "{}", 'utf8')) {
             throw new Error("could not create database");
@@ -294,106 +287,99 @@ class Store {
     }
   }
 
-
-
   save(id, o, cb) {
     if (cb == null) {
-      cb = function() {};
+      cb = () => {};
     }
     return save.call(this, id, o, cb);
-  };
+  }
 
   saveSync(id, o) {
     return save.call(this, id, o);
-  };
+  }
 
   get(id, cb) {
     if (cb == null) {
-      cb = function() {};
+      cb = () => {};
     }
-    return get.call(this, id, cb);
-  };
+    get.call(this, id, cb);
+  }
 
   getSync(id) {
     return get.call(this, id);
-  };
+  }
 
   delete(id, cb) {
-    return remove.call(this, id, cb);
-  };
+    remove.call(this, id, cb);
+  }
 
   deleteSync(id) {
     return remove.call(this, id);
-  };
+  }
 
   all(cb) {
-    if (cb == null) {
-      cb = function() {};
-    }
-    if (this._memory) {
-      return cb(null, this._cache);
-    } else if (this._single) {
+
+    if (cb == null) cb = () => {};
+
+    if (this._memory) return cb(null, this._cache);
+
+    if (this._single) {
       return getObjectFromFile.call(this, void 0, cb);
-    } else {
-      return readIDs(this._dir, (function(_this) {
-        return function(err, ids) {
-          var all, id, loaders, that;
-          if (typeof er !== "undefined" && er !== null) {
-            return cb(err);
-          }
-          that = _this;
-          all = {};
-          loaders = (function() {
-            var i, len, results;
-            results = [];
-            for (i = 0, len = ids.length; i < len; i++) {
-              id = ids[i];
-              results.push((function(id) {
-                return function(cb) {
-                  return that.get(id, function(err, o) {
-                    if (!err) {
-                      all[id] = o;
-                    }
-                    return cb(err);
-                  });
-                };
-              })(id));
-            }
-            return results;
-          })();
-          return async.parallel(loaders, function(err) {
-            return cb(err, all);
-          });
-        };
-      })(this));
     }
-  };
+    readIDs(this._dir, ((that) => {
+      return (err, ids) => {
+        if (typeof err !== "undefined" && err !== null) {
+          return cb(err);
+        }
+
+        let all = {};
+
+        const loaders = (() => {
+          let i, len;
+          let results = [];
+          for (i = 0, len = ids.length; i < len; i++) {
+            const id = ids[i];
+            results.push(((id) =>
+              (cb) => that.get(id, (err, o) => {
+                  if (!err) {
+                    all[id] = o;
+                  }
+                  return cb(err);
+                })
+            )(id));
+          }
+          return results;
+        })();
+
+        async.parallel(loaders, (err) => cb(err, all));
+
+      };
+    })(this));
+  }
 
   allSync() {
-    var db, f, i, item, len, objects, ref;
-    if (this._memory) {
-      return this._cache;
-    }
+
+    if (this._memory) return this._cache;
+
     if (this._single) {
-      db = getObjectFromFileSync.apply(this);
+      const db = getObjectFromFileSync.apply(this);
       if (typeof db !== "object") {
         throw new Error("could not load database");
       }
       return db;
-    } else {
-      objects = {};
-      ref = readIDsSync(this._dir);
-      for (i = 0, len = ref.length; i < len; i++) {
-        f = ref[i];
-        item = getObjectFromFileSync.call(this, f);
-        if (item != null) {
-          objects[f] = item;
-        } else {
-          console.error("could not load '" + f + "'");
-        }
-      }
-      return objects;
     }
+
+    let objects = {};
+    readIDsSync(this._dir).forEach((f) => {
+      const item = getObjectFromFileSync.call(this, f);
+      if (item != null) {
+        objects[f] = item;
+      } else {
+        console.error("could not load '" + f + "'");
+      }
+    });
+
+    return objects;
   }
 
 }
