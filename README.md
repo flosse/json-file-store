@@ -107,6 +107,18 @@ or a custom ID
 var db = new Store("data",{saveId:'myKey'});
 ```
 
+### custom ID generator
+We use uuid v4 for ID generation if you don't pass an id when save a data. If you want, you can pass custom generator.
+```javascript
+var i = 0;
+var db = new Store("data",{
+  idGenerator: function() {
+    i = i + 1;
+    return i;
+  }
+});
+```
+
 
 ## Tests
 

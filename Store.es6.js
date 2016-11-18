@@ -102,7 +102,7 @@ const save = function(id, o, cb) {
     id = null;
   }
   if (typeof id !== "string") {
-    id = uuid.v4();
+    id = this._idGenerator();
   }
   const file = this._getFileName(id);
   o = clone(o);
@@ -243,6 +243,7 @@ class Store {
     this._pretty = opt.pretty === true;
     this._memory = opt.memory === true || opt.type === 'memory';
     this._saveId = opt.saveId;
+    this._idGenerator = typeof opt.idGenerator === "function" ? opt.idGenerator : uuid.v4;
 
     if (isJSONFile(this.name)) {
       this.name = this.name.split(".json")[0];
