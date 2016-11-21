@@ -10,16 +10,10 @@ import mkdirp from 'mkdirp';
 import clone  from 'clone';
 
 const isJSONFile = f => f.substr(-5) === ".json";
-
 const removeFileExtension = f => f.split(".json")[0];
-
 const getIDs = a => a.filter(isJSONFile).map(removeFileExtension);
-
 const readIDsSync = d => getIDs(fs.readdirSync(d));
-
-const readIDs = (d, cb) => fs.readdir(d, (err, ids) =>
-  cb(err, getIDs(ids))
-);
+const readIDs = (d, cb) => fs.readdir(d, (err, ids) => cb(err, getIDs(ids)));
 
 const getObjectFromFileSync = function(id) {
   try {
@@ -68,7 +62,7 @@ const saveObjectToFile = function(o, file, cb) {
   try {
     json = JSON.stringify(o, null, indent);
   } catch (error) {
-    if (cb != null) {
+    if (typeof cb === "function") {
       return cb(error);
     } else {
       return error;
@@ -77,7 +71,7 @@ const saveObjectToFile = function(o, file, cb) {
 
   const tmpFileName = file + uuid.v4() + ".tmp";
 
-  if (cb != null) {
+  if (typeof cb === "function") {
     canWriteToFile(file, (err) => {
       if (err) return cb(err);
 
@@ -101,14 +95,14 @@ const saveObjectToFile = function(o, file, cb) {
 const id2fileName = (id, dir) => path.join(dir, id + ".json");
 
 const save = function(id, o, cb) {
-  let backup, k;
+  let backup, k, data;
   if (typeof id === "object") {
     cb = o;
     o = id;
     id = null;
   }
-  if (id == null) {
-    id = uuid.v4();
+  if (typeof id !== "string") {
+    id = this._idGenerator();
   }
   const file = this._getFileName(id);
   o = clone(o);
@@ -120,122 +114,123 @@ const save = function(id, o, cb) {
     }
   }
 
-  const data = this._single ? (backup = this._cache[id], this._cache[id] = o, this._cache) : o;
-
-  const done = (function(_this) {
-    return (err) => {
-      if (err) {
-        if (_this._single) {
-          _this._cache[id] = backup;
-        }
-        if (cb != null) {
-          cb(err);
-        } else {
-          return err;
-        }
-      } else {
-        _this._cache[id] = o;
-        if (cb != null) {
-          cb(null, id);
-        } else {
-          return id;
-        }
-      }
-    };
-  })(this);
-
-  if (this._memory) return done();
-
-  if (cb != null) {
-    saveObjectToFile.call(this, data, file, done);
+  if (this._single) {
+    backup = this._cache[id];
+    this._cache[id] = o;
+    data = this._cache;
   } else {
-    return done(saveObjectToFile.call(this, data, file));
+    data = o;
+  }
+
+  const done = function(err) {
+    if (err) {
+      if (this._single) {
+        this._cache[id] = backup;
+      }
+      if (typeof cb === "function") {
+        cb(err);
+      } else {
+        return err;
+      }
+    } else {
+      this._cache[id] = o;
+      if (typeof cb === "function") {
+        cb(null, id);
+      } else {
+        return id;
+      }
+    }
+  };
+
+
+  if (this._memory) return done.call(this);
+
+  if (typeof cb === "function") {
+    saveObjectToFile.call(this, data, file, done.bind(this));
+  } else {
+    return done.call(this, saveObjectToFile.call(this, data, file));
   }
 };
 
 const get = function(id, cb) {
   let o = clone(this._cache[id]);
-  if (o != null) {
-    return (cb != null ? cb(null, o) : o);
+  if (typeof o === "object") {
+    return (typeof cb === "function" ? cb(null, o) : o);
   }
-  const done = ((_this) => {
-    return (err, o) => {
-      let e, item;
-      if (err) {
-        const e = new Error("could not load data");
-        if (cb != null) {
-          return cb(e);
-        } else {
-          return e;
-        }
-      }
-      item = _this._single ? o[id] : o;
-      if (item == null) {
-        e = new Error("could not load data");
-        if (cb != null) {
-          return cb(e);
-        } else {
-          return e;
-        }
-      }
-      _this._cache[id] = item;
-      if (cb != null) {
-        return cb(null, item);
+  const done = function (err, o) {
+    let e, item;
+    if (err) {
+      const e = new Error("could not load data");
+      if (typeof cb === "function") {
+        return cb(e);
       } else {
-        return item;
+        return e;
       }
-    };
-  })(this);
+    }
+    item = this._single ? o[id] : o;
+    if (typeof item !== "object") {
+      e = new Error("could not load data");
+      if (typeof cb === "function") {
+        return cb(e);
+      } else {
+        return e;
+      }
+    }
+    this._cache[id] = item;
+    if (typeof cb === "function") {
+      return cb(null, item);
+    } else {
+      return item;
+    }
+  };
 
-  if (this._memory) return done(null, o);
+  if (this._memory) return done.call(this, null, o);
 
-  if (cb != null) return getObjectFromFile.call(this, id, done);
+  if (typeof cb === "function") return getObjectFromFile.call(this, id, done.bind(this));
 
   const err = (o = getObjectFromFileSync.call(this, id)) instanceof Error;
 
-  return done((err ? o : void 0), (!err ? o : void 0));
+  return done.call(this, (err ? o : void 0), (!err ? o : void 0));
 };
 
 const remove = function(id, cb) {
   let e, err, notInCache, o;
   const file = this._getFileName(id);
   const cacheBackup = this._cache[id];
-  if (cacheBackup == null) {
+  if (typeof cacheBackup !== "object") {
     notInCache = new Error(id + " does not exist");
   }
-  const done = ((_this) => {
-    return (err) => {
-      if (err) {
-        _this._cache[id] = cacheBackup;
-        return (cb != null ? cb(err) : err);
-      }
-      delete _this._cache[id];
-      return typeof cb === "function" ? cb() : void 0;
-    };
-  })(this);
+  const done = function (err) {
+    if (err) {
+      this._cache[id] = cacheBackup;
+      return (typeof cb === "function" ? cb(err) : err);
+    }
+    delete this._cache[id];
+    return typeof cb === "function" ? cb() : void 0;
+  };
 
   if (this._single) {
     delete this._cache[id];
-    if (this._memory || (notInCache != null)) {
-      return done(notInCache);
+    if (this._memory || (notInCache !== undefined)) {
+      return done.call(this, notInCache);
     }
 
-    if (cb != null) {
-      return saveObjectToFile.call(this, this._cache, file, done);
+    if (typeof cb === "function") {
+      return saveObjectToFile.call(this, this._cache, file, done.bind(this));
     }
 
     err = (o = saveObjectToFile.call(this, this._cache, file)) instanceof Error;
-    return done((err ? o : void 0), (!err ? o : void 0));
+    return done.call(this, (err ? o : void 0), (!err ? o : void 0));
   }
 
-  if (this._memory) return done(notInCache);
+  if (this._memory) return done.call(this, notInCache);
 
-  if (cb != null) return fs.unlink(file, done);
+  if (typeof cb === "function") return fs.unlink(file, done.bind(this));
 
   try {
-    return done(fs.unlinkSync(file));
+    return done.call(this, fs.unlinkSync(file));
   } catch (error) {
-    return done(error);
+    return done.call(this, error);
   }
 };
 
@@ -248,6 +243,7 @@ class Store {
     this._pretty = opt.pretty === true;
     this._memory = opt.memory === true || opt.type === 'memory';
     this._saveId = opt.saveId;
+    this._idGenerator = typeof opt.idGenerator === "function" ? opt.idGenerator : uuid.v4;
 
     if (isJSONFile(this.name)) {
       this.name = this.name.split(".json")[0];
@@ -287,10 +283,7 @@ class Store {
     }
   }
 
-  save(id, o, cb) {
-    if (cb == null) {
-      cb = () => {};
-    }
+  save(id, o, cb = () => {}) {
     return save.call(this, id, o, cb);
   }
 
@@ -298,10 +291,7 @@ class Store {
     return save.call(this, id, o);
   }
 
-  get(id, cb) {
-    if (cb == null) {
-      cb = () => {};
-    }
+  get(id, cb = () => {}) {
     get.call(this, id, cb);
   }
 
@@ -317,44 +307,33 @@ class Store {
     return remove.call(this, id);
   }
 
-  all(cb) {
-
-    if (cb == null) cb = () => {};
+  all(cb = () => {}) {
 
     if (this._memory) return cb(null, this._cache);
 
     if (this._single) {
       return getObjectFromFile.call(this, void 0, cb);
     }
-    readIDs(this._dir, ((that) => {
-      return (err, ids) => {
-        if (typeof err !== "undefined" && err !== null) {
-          return cb(err);
-        }
+    readIDs(this._dir, function (err, ids) {
+      if (typeof err !== "undefined" && err !== null) {
+        return cb(err);
+      }
 
-        let all = {};
+      let all = {};
+      const loaders = ids.map((id) => {
+        return function (cb) {
+          return this.get(id, (err, o) => {
+            if (!err) {
+              all[id] = o;
+            }
+            return cb(err);
+          });
+        }.bind(this);
+      });
 
-        const loaders = (() => {
-          let i, len;
-          let results = [];
-          for (i = 0, len = ids.length; i < len; i++) {
-            const id = ids[i];
-            results.push(((id) =>
-              (cb) => that.get(id, (err, o) => {
-                  if (!err) {
-                    all[id] = o;
-                  }
-                  return cb(err);
-                })
-            )(id));
-          }
-          return results;
-        })();
+      async.parallel(loaders, (err) => cb(err, all));
 
-        async.parallel(loaders, (err) => cb(err, all));
-
-      };
-    })(this));
+    }.bind(this));
   }
 
   allSync() {
@@ -362,7 +341,7 @@ class Store {
     if (this._memory) return this._cache;
 
     if (this._single) {
-      const db = getObjectFromFileSync.apply(this);
+      const db = getObjectFromFileSync.call(this);
       if (typeof db !== "object") {
         throw new Error("could not load database");
       }
@@ -372,7 +351,7 @@ class Store {
     let objects = {};
     readIDsSync(this._dir).forEach((f) => {
       const item = getObjectFromFileSync.call(this, f);
-      if (item != null) {
+      if (item !== undefined) {
         objects[f] = item;
       } else {
         console.error("could not load '" + f + "'");

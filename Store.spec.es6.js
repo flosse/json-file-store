@@ -14,7 +14,7 @@ describe("The jfs module", () => {
     fs.unlink(NAME + '.json', (err) => {
       exec("rm -rf ./" + NAME, (err, out) => {
         console.log(out);
-        if (err != null) {
+        if (err !== null) {
           console.error(err);
         }
         done();
@@ -79,6 +79,19 @@ describe("The jfs module", () => {
       store.save({}, (err, id) => {
         store.get(id, (err, o) => {
           o.myCustomKey.should.equal(id);
+          done();
+        });
+      });
+    });
+
+    it("can autosave the id with a custom generator", (done) => {
+      const store = new Store(NAME, {
+        idGenerator: () => "customId",
+        saveId: true
+      });
+      store.save({}, (err, id) => {
+        store.get(id, (err, o) => {
+          o.id.should.equal("customId");
           done();
         });
       });
