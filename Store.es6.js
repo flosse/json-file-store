@@ -5,7 +5,7 @@ Copyright (C) 2012 - 2016 Markus Kohlhase <mail@markus-kohlhase.de>
 import async  from 'async';
 import fs     from 'fs';
 import path   from 'path';
-import uuid   from 'node-uuid';
+import uuid   from 'uuid';
 import mkdirp from 'mkdirp';
 import clone  from 'clone';
 

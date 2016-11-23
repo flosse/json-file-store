@@ -11,10 +11,10 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "mkdirp": "~0.5.1",
-    "node-uuid": "~1.4.7",
     "async": "~2.1.2",
-    "clone": "~2.0.0"
+    "clone": "~2.0.0",
+    "mkdirp": "~0.5.1",
+    "uuid": "^3.0.0"
   },
   "devDependencies": {
     "babel": "^6.5.2",
