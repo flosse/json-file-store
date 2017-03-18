@@ -117,6 +117,16 @@ describe("The jfs module", () => {
         });
       });
     });
+
+    it("properly saves objects with undefined values", (done) => {
+      const store = new Store(NAME);
+      store.save('test',{x: undefined}, (err,id) => {
+        store.get('test', (err, res) => {
+          res.should.eql({x:undefined});
+          done()
+        });
+      });
+    });
   });
 
   describe("get method", () => {
