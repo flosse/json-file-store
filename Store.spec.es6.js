@@ -60,6 +60,20 @@ describe("The jfs module", () => {
       });
     });
 
+    it("can save a single string", (done) => {
+      const store = new Store(NAME);
+      store.save("id", "asdf", (err) => {
+        should.not.exist(err);
+        fs.readFile("./" + NAME + "/id.json", "utf-8", (err, content) => {
+          content.should.equal('""asdf""');
+          store.get("id",(err,str) => {
+            should.not.exist(err);
+            str.should.eql("asdf");
+          });
+        });
+      });
+    });
+
     it("can autosave the id", (done) => {
       const store = new Store(NAME, {
         saveId: true
@@ -106,6 +120,13 @@ describe("The jfs module", () => {
       id.should.equal("id");
       const content = fs.readFileSync("./" + NAME + "/id.json", "utf-8");
       content.should.equal('{"s":"ync"}');
+    });
+
+    it("can save a single string synchronously", () => {
+      const store = new Store(NAME);
+      store.saveSync("id", "asdf");
+      const content = store.getSync("id");
+      content.should.equal("asdf");
     });
 
     it("creates a deep copy for the cache", (done) => {
