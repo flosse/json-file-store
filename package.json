@@ -8,7 +8,7 @@
   "bugs": "http://github.com/flosse/json-file-store/issues",
   "license": "MIT",
   "engines": {
-    "node": ">=0.12"
+    "node": ">=12"
   },
   "dependencies": {
     "async": "~2.5.0",
