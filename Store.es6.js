@@ -2,12 +2,12 @@
 Copyright (C) 2012 - 2016 Markus Kohlhase <mail@markus-kohlhase.de>
  */
 
-import async  from 'async';
-import fs     from 'fs';
-import path   from 'path';
-import uuid   from 'uuid';
-import mkdirp from 'mkdirp';
-import clone  from 'clone';
+import async            from 'async';
+import fs               from 'fs';
+import path             from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import mkdirp           from 'mkdirp';
+import clone            from 'clone';
 
 const isJSONFile = f => f.substr(-5) === ".json";
 const removeFileExtension = f => f.split(".json")[0];
@@ -69,7 +69,7 @@ const saveObjectToFile = function(o, file, cb) {
     }
   }
 
-  const tmpFileName = file + uuid.v4() + ".tmp";
+  const tmpFileName = file + uuidv4() + ".tmp";
 
   if (typeof cb === "function") {
     canWriteToFile(file, (err) => {
@@ -243,7 +243,7 @@ class Store {
     this._pretty = opt.pretty === true;
     this._memory = opt.memory === true || opt.type === 'memory';
     this._saveId = opt.saveId;
-    this._idGenerator = typeof opt.idGenerator === "function" ? opt.idGenerator : uuid.v4;
+    this._idGenerator = typeof opt.idGenerator === "function" ? opt.idGenerator : uuidv4;
 
     if (isJSONFile(this.name)) {
       this.name = this.name.split(".json")[0];
