@@ -160,7 +160,7 @@ const get = function(id, cb) {
   const done = function (err, o) {
     let e, item;
     if (err) {
-      const e = new Error("could not load data");
+      const e = throw new Error("could not load data");
       if (typeof cb === "function") {
         return cb(e);
       } else {
@@ -169,7 +169,7 @@ const get = function(id, cb) {
     }
     item = this._single ? o[id] : o;
     if (typeof item !== "object") {
-      e = new Error("could not load data");
+      e = throw new Error("could not load data");
       if (typeof cb === "function") {
         return cb(e);
       } else {
